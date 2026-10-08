@@ -10,6 +10,9 @@ router.use(authenticateToken, requireAdmin);
 // GET /api/admin/stats
 router.get('/stats', async (req, res) => {
   try {
+    const daysParam = parseInt(req.query.days, 10);
+    const intervalDays = [7, 30, 90].includes(daysParam) ? daysParam : 7;
+
     const ordersStats = await db.query(`
       SELECT 
         COUNT(*) as total_orders,
@@ -46,16 +49,16 @@ router.get('/stats', async (req, res) => {
       SELECT COUNT(*) as total_users FROM users WHERE role = 'customer'
     `);
 
-    // Sales by Day (last 7 days)
+    // Sales by Day (dynamic range: 7, 30, 90 days)
     const salesByDay = await db.query(`
       SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as day,
              COUNT(*) as order_count,
              COALESCE(SUM(total), 0) as revenue
       FROM orders
-      WHERE created_at >= NOW() - INTERVAL '7 days'
+      WHERE created_at >= NOW() - ($1 || ' days')::INTERVAL
       GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
       ORDER BY day ASC
-    `);
+    `, [intervalDays]);
 
     // Orders by status
     const ordersByStatus = await db.query(`

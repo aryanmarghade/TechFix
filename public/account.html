@@ -16,11 +16,12 @@
       margin: 2.5rem 0 5rem 0;
     }
     .account-menu {
-      background: #fff;
-      border: 1px solid var(--border);
+      background: var(--color-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: var(--radius-lg);
       overflow: hidden;
       height: fit-content;
+      box-shadow: var(--shadow-md);
     }
     .menu-item {
       padding: 0.85rem 1.25rem;
@@ -29,13 +30,18 @@
       gap: 0.75rem;
       font-weight: 600;
       font-size: 0.9rem;
-      color: var(--text-main);
-      border-bottom: 1px solid var(--border);
+      color: #D1D5DB;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       cursor: pointer;
+      transition: var(--transition);
     }
-    .menu-item:hover, .menu-item.active {
-      background: var(--primary-light);
-      color: var(--primary);
+    .menu-item:hover {
+      background: #1F2937;
+      color: #FFFFFF;
+    }
+    .menu-item.active {
+      background: var(--color-accent);
+      color: #FFFFFF;
     }
     .menu-item:last-child {
       border-bottom: none;
@@ -64,7 +70,7 @@
       </a>
 
       <div class="header-actions">
-        <button class="btn btn-outline btn-sm" onclick="TechFix.logout()">Sign Out</button>
+        <button class="btn btn-outline btn-sm" style="color: #FFFFFF; border-color: rgba(255,255,255,0.25);" onclick="TechFix.logout()">Sign Out</button>
       </div>
     </div>
   </header>
