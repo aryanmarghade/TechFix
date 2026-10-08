@@ -239,18 +239,28 @@
           <!-- Gallery -->
           <div>
             <div class="gallery-main">
-              <img src="${p.image_url}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600&auto=format&fit=crop&q=80'">
+              <img id="main-product-img" src="${p.image_url}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600&auto=format&fit=crop&q=80'">
             </div>
+
+            ${p.gallery && p.gallery.length > 0 ? `
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.25rem;">
+                <img src="${p.image_url}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 2px solid var(--primary); cursor: pointer;" onclick="document.getElementById('main-product-img').src='${p.image_url}'">
+                ${p.gallery.map(img => `
+                  <img src="${img.image_url}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); cursor: pointer;" onclick="document.getElementById('main-product-img').src='${img.image_url}'">
+                `).join('')}
+              </div>
+            ` : ''}
             
             <div class="info-box">
               <strong>📦 Delivery & Payment Information:</strong><br>
               • Available for <strong>Cash on Delivery (COD)</strong> across Mumbai & Thane.<br>
-              • Pre-inspected and tested before dispatch.<br>
+              • Pre-inspected and stress-tested before dispatch.<br>
               • In-box official brand warranty receipt included.
             </div>
           </div>
 
           <!-- Product Details -->
+          <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
               <span class="badge badge-primary">${p.brand}</span>
               ${isPrebuilt ? '<span class="badge badge-warning">Complete Ready-to-Use PC</span>' : ''}
@@ -266,7 +276,7 @@
 
             <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
               SKU: <strong>${p.sku}</strong> | Stock Status: 
-              ${p.stock_quantity > 0 ? `<span style="color: var(--success); font-weight: 700;">In Stock (${p.stock_quantity} units left)</span>` : '<span style="color: var(--danger); font-weight: 700;">Out of Stock</span>'}
+              ${p.stock_quantity > 5 ? `<span style="color: var(--success); font-weight: 700;">In Stock (${p.stock_quantity} units available)</span>` : (p.stock_quantity > 0 ? `<span style="color: #ea580c; font-weight: 700;">Low Stock (Only ${p.stock_quantity} left!)</span>` : '<span style="color: var(--danger); font-weight: 700;">Out of Stock</span>')}
             </div>
 
             <div style="display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.5rem; background: #fff; padding: 1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
@@ -361,6 +371,36 @@
             `).join('') : '<p style="color: var(--text-muted);">No reviews yet. Be the first customer to review this product!</p>'}
           </div>
         </div>
+
+        <!-- Related Products & Recommendations -->
+        ${p.related && p.related.length > 0 ? `
+          <div style="margin-bottom: 4rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <h2 style="font-size: 1.4rem; font-weight: 800;">Recommended Hardware & Alternatives</h2>
+              <a href="/shop.html?category=${p.category_slug}" class="btn btn-outline btn-sm">View More in ${p.category_name}</a>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem;">
+              ${p.related.map(rel => `
+                <div class="product-card" style="margin-bottom: 0;">
+                  <div class="product-card-image">
+                    <a href="/product.html?slug=${rel.slug}">
+                      <img src="${rel.image_url}" alt="${rel.name}">
+                    </a>
+                  </div>
+                  <div class="product-card-body">
+                    <span class="product-category">${rel.brand}</span>
+                    <h3 class="product-title"><a href="/product.html?slug=${rel.slug}">${rel.name}</a></h3>
+                    <div class="product-price-row">
+                      <span class="product-price">${TechFix.formatPrice(rel.price)}</span>
+                      ${rel.compare_at_price ? `<span class="product-original-price">${TechFix.formatPrice(rel.compare_at_price)}</span>` : ''}
+                    </div>
+                    <a href="/product.html?slug=${rel.slug}" class="btn btn-outline btn-sm btn-block" style="margin-top: 0.75rem;">View Details</a>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       `;
     }
 

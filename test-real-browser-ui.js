@@ -566,11 +566,107 @@ async function runBrowserE2EQA() {
       headers: { 'Authorization': `Bearer ${t}` }
     });
   }, checkDb.rows[0].id);
-  console.log('✅ Admin Dashboard & Product Management PASSED!\n');
+  // -------------------------------------------------------------
+  // 11. PC BUILDER COMPATIBILITY & PRESET E2E
+  // -------------------------------------------------------------
+  console.log('--- 11. PC BUILDER REAL BROWSER E2E ---');
+  await page.goto('http://localhost:5000/build-pc.html', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(600);
+
+  // Apply 1-Click Preset (Esports 1080p)
+  await page.click('button:has-text("1080p Esports Gaming")');
+  await page.waitForTimeout(1000);
+
+  const compatBoxText = await page.textContent('#compat-status-box');
+  const grandTotalText = await page.textContent('#build-grand-total');
+  console.log(`  PC Builder Preset Applied -> Compatibility: "${compatBoxText.trim()}", Total: ${grandTotalText.trim()}`);
+  if (!compatBoxText.includes('Compatible') && !compatBoxText.includes('✓')) {
+    throw new Error('Esports preset did not validate as compatible in browser');
+  }
+
+  // Add build to cart
+  await page.click('#add-build-cart-btn');
+  await page.waitForTimeout(800);
+  const cartItemCount = await page.locator('.cart-item').count();
+  console.log(`  Cart items displayed: ${cartItemCount}`);
+  if (cartItemCount === 0) throw new Error('Custom PC build was not added to cart');
+  console.log('✅ PC Builder Real Browser E2E PASSED!\n');
+
+  // -------------------------------------------------------------
+  // 12. CUSTOMER DASHBOARD (ORDERS, WISHLIST, REPAIRS, INVOICE)
+  // -------------------------------------------------------------
+  console.log('--- 12. CUSTOMER DASHBOARD REAL BROWSER E2E ---');
+  await page.goto('http://localhost:5000/account.html', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+
+  const accUser = await page.textContent('#acc-user-name');
+  console.log(`  Customer Dashboard Loaded for user: ${accUser.trim()}`);
+
+  // Switch to Wishlist Tab
+  await page.click('.menu-item:has-text("My Wishlist")');
+  await page.waitForTimeout(500);
+  const wishlistActive = await page.locator('#pane-wishlist').isVisible();
+  console.log(`  Wishlist Tab Active: ${wishlistActive}`);
+  if (!wishlistActive) throw new Error('Wishlist tab failed to activate');
+
+  // Switch to Repairs Tab
+  await page.click('.menu-item:has-text("Repair Requests")');
+  await page.waitForTimeout(500);
+  const repairsActive = await page.locator('#pane-repairs').isVisible();
+  console.log(`  Repairs Tab Active: ${repairsActive}`);
+  if (!repairsActive) throw new Error('Repairs tab failed to activate');
+
+  // Switch to Saved PC Builds Tab
+  await page.click('.menu-item:has-text("Saved PC Builds")');
+  await page.waitForTimeout(500);
+  const buildsActive = await page.locator('#pane-builds').isVisible();
+  console.log(`  Saved Builds Tab Active: ${buildsActive}`);
+  if (!buildsActive) throw new Error('Saved builds tab failed to activate');
+  console.log('✅ Customer Dashboard Real Browser E2E PASSED!\n');
+
+  // -------------------------------------------------------------
+  // 13. PRODUCT DETAIL PAGE (GALLERY, SPECS, REVIEWS, RECOMMENDATIONS)
+  // -------------------------------------------------------------
+  console.log('--- 13. PRODUCT DETAIL PAGE REAL BROWSER E2E ---');
+  await page.goto('http://localhost:5000/shop.html?category=laptops', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(500);
+  await page.locator('a.btn-primary:has-text("Details")').first().click();
+  await page.waitForTimeout(1000);
+
+  const prodTitle = await page.textContent('h1');
+  const specTableCount = await page.locator('.spec-table').count();
+  const relatedCount = await page.locator('.product-card').count();
+  console.log(`  Product Details Loaded: "${prodTitle.trim()}", Specs: ${specTableCount > 0}, Related items: ${relatedCount}`);
+  if (!prodTitle || specTableCount === 0) throw new Error('Product detail page failed to render specs or title');
+  console.log('✅ Product Detail Page Real Browser E2E PASSED!\n');
+
+  // -------------------------------------------------------------
+  // 14. OLLAMA AI ASSISTANT API & FALLBACK TEST
+  // -------------------------------------------------------------
+  console.log('--- 14. OLLAMA AI ASSISTANT & FALLBACK TEST ---');
+  const chatStatusRes = await page.evaluate(async () => {
+    const res = await fetch('/api/chat/status');
+    return res.json();
+  });
+  console.log(`  AI Chat Service Status: Online = ${chatStatusRes.online}, Model = ${chatStatusRes.model}`);
+
+  const chatMessageRes = await page.evaluate(async () => {
+    const res = await fetch('/api/chat/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Recommend an SSD for laptop upgrade' })
+    });
+    return res.json();
+  });
+  console.log(`  AI Chat Message Response Received (success: ${chatMessageRes.success}, hasReply: ${!!(chatMessageRes.reply || chatMessageRes.response)})`);
+  if (!chatMessageRes.reply && !chatMessageRes.response) {
+    throw new Error('Chat endpoint failed to return a response or graceful fallback');
+  }
+  console.log('✅ Ollama AI Assistant & Fallback PASSED!\n');
 
   await browser.close();
   console.log('===============================================================');
-  console.log('🎉 ALL 12 REAL BROWSER UI PLAYWRIGHT TESTS PASSED 100%!');
+  console.log('🎉 ALL 14 REAL BROWSER UI PLAYWRIGHT TESTS PASSED 100%!');
   console.log('===============================================================');
   process.exit(0);
 }

@@ -366,6 +366,7 @@
               </div>
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <span class="badge ${ord.order_status === 'Delivered' ? 'badge-success' : 'badge-primary'}">${ord.order_status}</span>
+                <a href="/api/orders/${ord.id}/invoice" target="_blank" class="btn btn-sm btn-outline">🧾 Invoice</a>
                 <a href="/track-order.html?orderNumber=${ord.order_number}" class="btn btn-sm btn-outline">Track</a>
               </div>
             </div>
