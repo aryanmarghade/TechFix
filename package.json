@@ -1,13 +1,24 @@
 {
-  "name": "computer.com",
+  "name": "techfix-platform",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "TechFix — Intelligent Computer Hardware Marketplace & Repair Platform",
+  "main": "server/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/app.js",
+    "test": "node validate-qa.js",
+    "test:e2e": "node test-e2e.js",
+    "test:browser": "node test-real-browser-ui.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "ecommerce",
+    "hardware",
+    "pc-builder",
+    "computer-repair",
+    "express",
+    "postgresql",
+    "ollama"
+  ],
+  "author": "Aryan Marghade",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
