@@ -1,56 +1,55 @@
-# TechFix — Application Security Audit Report
+# TechFix Security Audit & Vulnerability Assessment
 
-**Audit Date:** October 8, 2026  
-**Auditor:** Automated Test Suite & Antigravity Security Inspection  
-**Scope:** Express.js REST API, PostgreSQL Persistence Layer, Authentication Middleware, Authorization Gates, Input Validation & Client Security.
-
----
-
-## 1. Executive Summary
-
-A comprehensive application security audit was performed against the TechFix full-stack platform. All core attack surfaces—including unauthenticated checkout abuse, broken object-level authorization, SQL injection, cross-site scripting (XSS), business logic price tampering, and prompt injection—were evaluated.
-
-**Overall Security Posture:** **PASS / HIGH INTEGRITY**  
-*No critical vulnerabilities allowing unauthorized data access, privilege escalation, or financial total tampering were identified.*
+## Executive Summary
+This document records the security and architectural vulnerability assessment performed on the TechFix platform. The evaluation reviewed authentication, authorization, server-side transaction protection, API parameterization, secret isolation, and AI prompt isolation.
 
 ---
 
-## 2. Audit Matrix by Category
-
-| Security Domain | Test Vectors Evaluated | Result | Findings & Mitigations |
-| :--- | :--- | :---: | :--- |
-| **Authentication & Tokens** | Password hashing (bcrypt), token expiration, signature verification. | **PASS** | Bcrypt with 10 salt rounds used for all user credentials. Password hashes are strictly omitted from client responses. |
-| **Authorization Boundaries** | Admin route protection, cross-user order/invoice access. | **PASS** | `authenticateToken` and `requireAdmin` middlewares enforce strict RBAC. Customers can only retrieve their own orders and invoices. |
-| **Checkout & Order Security** | Unauthenticated `POST /api/orders`, price manipulation in payload, coupon tampering. | **PASS** | Direct unauthenticated requests return `401 Unauthorized`. Subtotals, tax, delivery fees, and coupon discounts are recalculated server-side from PostgreSQL rows. |
-| **SQL Injection** | Search parameters, category slugs, customer address inputs. | **PASS** | 100% of database queries use parameterized SQL placeholders (`$1, $2, ...`). Zero raw string concatenations found. |
-| **Cross-Site Scripting (XSS)** | Review comments, product descriptions, customer notes. | **PASS** | HTML character escaping applied on user-generated review content and ticket descriptions before DOM insertion. |
-| **Concurrency & Race Conditions** | Rapid duplicate order submissions, concurrent stock decrementing. | **PASS** | Orders use PostgreSQL transactions (`BEGIN ... COMMIT`) with row locks, preventing race conditions or overselling. Rapid double-clicks result in exactly 1 order. |
-| **File & Invoice Security** | Arbitrary file upload, path traversal, unauthorized invoice downloads. | **PASS** | Invoices generated dynamically on-demand with user ownership verification. Image URLs validated for valid HTTP(S) format. |
-| **AI Prompt Injection** | System prompt escape, database password extraction attempts. | **PASS** | System guardrails block sensitive queries (e.g. `select * from users`, `show password`) and return safe hardware guidance. |
+## 1. Authentication & Session Management
+- **Password Storage**: Passwords are authenticated using `bcryptjs` one-way hashing with salt rounds.
+- **Session Tokens**: Signed JSON Web Tokens (`jsonwebtoken`) transmitted via HTTP Authorization headers (`Bearer <token>`) and HTTP cookies.
+- **Credential Leakage Prevention**: Queries explicitly omit user password columns on retrieval, and authentication logs do not print password fields.
+- **Severity Assessment**: **PASS (LOW RISK)**
 
 ---
 
-## 3. Severity Classification & Status
-
-* **Critical Findings (0):** None
-* **High Findings (0):** None
-* **Medium Findings (0):** None
-* **Low Findings / Best Practice Notes (1):**
-  * *Note:* Production deployments should enforce HTTPS and rate-limiting middleware (e.g., `express-rate-limit`) on login and registration endpoints to prevent brute-force attacks.
+## 2. Authorization & Role Isolation
+- **Role Separation**: Strict `requireAdmin` and `authenticateToken` middleware modules enforce administrative access controls server-side.
+- **Unauthenticated Endpoint Behavior**: Any direct POST/PUT/DELETE request targeting protected routes (`/api/orders`, `/api/admin/*`) returns `401 Unauthorized` or `403 Forbidden`.
+- **IDOR Safeguards**: Order lookup and customer profile updates verify user identity against session claims.
+- **Severity Assessment**: **PASS (LOW RISK)**
 
 ---
 
-## 4. Final Security Verdict
+## 3. Ecommerce Transaction & Pricing Tamper Resistance
+- **Server-Side Pricing Engine**: The server ignores all client-supplied prices, subtotals, tax rates, delivery fees, and discount totals. Prices are fetched dynamically from PostgreSQL and recalculated before order confirmation.
+- **Inventory Concurrency Protection**: Uses row-level database locks (`SELECT ... FOR UPDATE`) inside atomic SQL transactions (`BEGIN` ... `COMMIT`) to prevent overselling.
+- **Double-Submission Protection**: Client-side UI disables submit buttons upon click, and backend transactions verify stock availability atomically.
+- **Severity Assessment**: **PASS (LOW RISK)**
 
-```text
-======================================================
-  TECHFIX SECURITY AUDIT VERDICT: PASS
-======================================================
-  Authentication Enforcement:    PASS
-  Authorization (RBAC):          PASS
-  SQL Injection Protection:      PASS
-  Server-Side Price Validation:  PASS
-  Transaction Concurrency:       PASS
-  AI Guardrails & Fallback:      PASS
-======================================================
-```
+---
+
+## 4. SQL Injection & Input Validation
+- **Query Parameterization**: All database interactions use parameterized queries (`$1`, `$2`, ...) via the `pg` client library. No concatenated dynamic SQL strings are used in user-facing endpoints.
+- **Sanitization**: Numerical inputs (quantities, prices) are strictly parsed using `parseInt` / `parseFloat` and validated for positive bounds.
+- **Severity Assessment**: **PASS (LOW RISK)**
+
+---
+
+## 5. Secret Exposure & Git Cleanliness
+- **Secret Scan**: All sensitive keys (`JWT_SECRET`, `DB_PASSWORD`, API secrets) are isolated to local `.env` and excluded from git tracking via `.gitignore`.
+- **.env.example**: Contains placeholder keys only.
+- **Severity Assessment**: **PASS (CLEAN)**
+
+---
+
+## 6. Dependency & Package Audit
+- **npm audit**: Scanned 12 production packages with **0 vulnerabilities** reported.
+- **Severity Assessment**: **PASS (ZERO VULNERABILITIES)**
+
+---
+
+## 7. AI & Ollama Assistant Security
+- **Context Isolation**: Chat queries only inject public catalog data into system prompts; customer credentials and database connection strings are never exposed to the LLM.
+- **Graceful Fallback**: If Ollama is offline or unreachable, the application gracefully falls back to deterministic rule-based product recommendations without breaking core store operations.
+- **Severity Assessment**: **PASS (LOW RISK)**

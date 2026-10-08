@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /shop.html
+Allow: /product.html
+Allow: /build-pc.html
+Allow: /repair.html
+Allow: /about.html
+Allow: /contact.html
+Allow: /faq.html
+Allow: /shipping-policy.html
+Allow: /refund-policy.html
+Allow: /privacy-policy.html
+Allow: /terms.html
+
+# Disallow private user accounts and administrative operations
+Disallow: /admin.html
+Disallow: /account.html
+Disallow: /cart.html
+Disallow: /checkout.html
+Disallow: /order-confirmation.html
+Disallow: /login.html
+Disallow: /register.html
+Disallow: /api/
+
+Sitemap: https://techfix.in/sitemap.xml
