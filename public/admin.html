@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Operations Dashboard — TechFix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 2rem;
+      margin: 2rem 0 5rem 0;
+    }
+    .admin-sidebar {
+      background: #1e293b;
+      color: #fff;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      height: fit-content;
+    }
+    .admin-menu-item {
+      padding: 0.9rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+    }
+    .admin-menu-item:hover, .admin-menu-item.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .admin-stat-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .admin-stat-num {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--dark);
+      margin-top: 0.25rem;
+    }
+    .admin-table-container {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 650px;
+    }
+    .admin-table th, .admin-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+      text-align: left;
+    }
+    .admin-table th {
+      background: #f8fafc;
+      font-weight: 700;
+      color: var(--dark);
+    }
+    .tab-view {
+      display: none;
+    }
+    .tab-view.active {
+      display: block;
+    }
+    .chart-bar-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 140px;
+      padding-top: 20px;
+      border-bottom: 2px solid var(--border);
+    }
+    .chart-bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .chart-bar-fill {
+      width: 100%;
+      max-width: 38px;
+      background: var(--primary);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.4s ease;
+      min-height: 4px;
+    }
+    .chart-bar-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      white-space: nowrap;
+    }
+    @media (max-width: 900px) {
+      .admin-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body style="background: #f1f5f9;">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-main">
+      <a href="/index.html" class="logo">
+        <span class="logo-badge">ADMIN</span>
+        <span>TECH<span class="text-fix">FIX</span> CONTROL</span>
+      </a>
+
+      <div class="header-actions">
+        <a href="/index.html" class="btn btn-sm btn-outline">View Public Store</a>
+        <button class="btn btn-sm btn-outline" style="color: var(--danger);" onclick="TechFix.logout()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="admin-layout">
+      <!-- Admin Sidebar Navigation -->
+      <aside class="admin-sidebar">
+        <div style="padding: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase;">Portal Role:</div>
+          <strong style="font-size: 1.1rem; color: #38bdf8;">Store Operations</strong>
+        </div>
+        <div class="admin-menu-item active" onclick="switchAdminTab('overview', this)">📊 Business Overview</div>
+        <div class="admin-menu-item" onclick="switchAdminTab('products', this)">💻 Product Management</div>
+        <div class="admin-menu-item" onclick="switchAdminTab('orders', this)">📦 Orders & COD</div>
+        <div class="admin-menu-item" onclick="switchAdminTab('coupons', this)">🎟️ Discounts & Coupons</div>
+        <div class="admin-menu-item" onclick="switchAdminTab('repairs', this)">🔧 Repair Workbench</div>
+        <div class="admin-menu-item" onclick="switchAdminTab('reviews', this)">⭐ Review Moderation</div>
+        <div class="admin-menu-item" onclick="switchAdminTab('customers', this)">👥 Customer Accounts</div>
+        <div class="admin-menu-item" onclick="switchAdminTab('tickets', this)">💬 Support Tickets</div>
+      </aside>
+
+      <!-- Admin Main Pane -->
+      <div>
+        <!-- 1. Overview Dashboard with Real PostgreSQL Data & Charts -->
+        <div id="adm-overview" class="tab-view active">
+          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem;">Business Metrics & Analytics</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div class="admin-stat-card">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">TOTAL COD REVENUE</div>
+              <div class="admin-stat-num" id="stat-revenue" style="color: var(--primary);">₹0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">TOTAL ORDERS</div>
+              <div class="admin-stat-num" id="stat-orders">0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">TOTAL PRODUCTS</div>
+              <div class="admin-stat-num" id="stat-products">0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">TOTAL CUSTOMERS</div>
+              <div class="admin-stat-num" id="stat-customers">0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">PENDING ORDERS</div>
+              <div class="admin-stat-num" id="stat-pending-orders" style="color: var(--warning);">0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">COMPLETED ORDERS</div>
+              <div class="admin-stat-num" id="stat-completed-orders" style="color: var(--success);">0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">LOW STOCK (≤ 5)</div>
+              <div class="admin-stat-num" id="stat-low-stock" style="color: var(--danger);">0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">ACTIVE REPAIRS</div>
+              <div class="admin-stat-num" id="stat-repairs" style="color: var(--accent);">0</div>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <!-- Sales by Day Chart -->
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">📈 Sales by Day (Last 7 Days)</h3>
+              <div id="chart-sales-by-day" class="chart-bar-container">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- Orders by Status Breakdown -->
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">📋 Orders by Status</h3>
+              <div id="status-breakdown-list" style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem;">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Selling Products & Category Revenue -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">🏆 Top Selling Hardware</h3>
+              <div id="top-products-list" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
+            </div>
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">💰 Revenue by Category</h3>
+              <div id="category-revenue-list" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Product Management (Search, Filter, Stock, Add, Edit, Delete, CSV Export/Import) -->
+        <div id="adm-products" class="tab-view">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Catalog & Inventory Management</h2>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <a href="/api/admin/products/export/csv" class="btn btn-outline btn-sm" id="btn-export-csv">📥 Export CSV</a>
+              <button class="btn btn-outline btn-sm" onclick="toggleImportCsvModal()">📤 Import CSV</button>
+              <button class="btn btn-primary btn-sm" onclick="toggleAddProductModal()">+ Add New Product</button>
+            </div>
+          </div>
+
+          <!-- Product Search & Filter Bar -->
+          <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+            <input type="text" id="adm-prod-search" placeholder="Search by name, brand, SKU..." class="form-control" style="flex: 1; min-width: 200px;" oninput="filterAdminProducts()">
+            <select id="adm-prod-cat-filter" class="form-control" style="width: auto; min-width: 160px;" onchange="filterAdminProducts()">
+              <option value="">All Categories</option>
+              <option value="laptops">Laptops</option>
+              <option value="linux-laptops">Linux Laptops</option>
+              <option value="pre-built-pcs">Pre-Built PCs</option>
+              <option value="internal-ssds">Internal SSDs</option>
+              <option value="external-ssds">External SSDs</option>
+              <option value="pen-drives">Pen Drives</option>
+              <option value="linux-pen-drives">Linux Pen Drives</option>
+              <option value="os-pen-drives">OS Pen Drives</option>
+              <option value="gaming-mouse">Gaming Mice</option>
+              <option value="normal-mouse">Normal Mice</option>
+              <option value="keyboards">Keyboards</option>
+              <option value="gaming-chair">Gaming Chairs</option>
+              <option value="office-chair">Office Chairs</option>
+              <option value="mouse-pad">Mouse Pads</option>
+              <option value="monitors">Monitors</option>
+            </select>
+            <select id="adm-prod-stock-filter" class="form-control" style="width: auto;" onchange="filterAdminProducts()">
+              <option value="">All Stock Levels</option>
+              <option value="in_stock">In Stock (> 0)</option>
+              <option value="low_stock">Low Stock (1 - 5)</option>
+              <option value="out_of_stock">Out of Stock (0)</option>
+            </select>
+            <select id="adm-prod-status-filter" class="form-control" style="width: auto;" onchange="filterAdminProducts()">
+              <option value="">All Statuses</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Disabled Only</option>
+            </select>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Price (₹)</th>
+                  <th>Stock Quantity</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adm-products-tbody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div id="adm-products-count" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.75rem;"></div>
+        </div>
+
+        <!-- 3. Orders Management -->
+        <div id="adm-orders" class="tab-view">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Orders & COD Settlement</h2>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" id="adm-order-search" placeholder="Search order #, customer, phone..." class="form-control" style="width: 240px;" oninput="filterAdminOrders()">
+              <select id="adm-order-status-filter" class="form-control" style="width: auto;" onchange="filterAdminOrders()">
+                <option value="">All Order Statuses</option>
+                <option value="Order Placed">Order Placed</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Packed">Packed</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Out for Delivery">Out for Delivery</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              <button class="btn btn-sm btn-outline" onclick="loadAdminOrders()">🔄 Refresh</button>
+            </div>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order Ref</th>
+                  <th>Customer</th>
+                  <th>City / Pincode</th>
+                  <th>Items & Discount</th>
+                  <th>Total Amount</th>
+                  <th>Payment</th>
+                  <th>Order Status</th>
+                  <th>Invoice</th>
+                </tr>
+              </thead>
+              <tbody id="adm-orders-tbody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4. Discounts & Coupons Management -->
+        <div id="adm-coupons" class="tab-view">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Discount Coupons & Promo Codes</h2>
+            <button class="btn btn-primary btn-sm" onclick="toggleAddCouponModal()">+ Create New Coupon</button>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Type & Value</th>
+                  <th>Min Order</th>
+                  <th>Max Cap</th>
+                  <th>Used / Limit</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adm-coupons-tbody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5. Repairs Workbench -->
+        <div id="adm-repairs" class="tab-view">
+          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem;">Repair Requests & Estimates</h2>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Customer</th>
+                  <th>Device / Issue</th>
+                  <th>Pickup Slot</th>
+                  <th>Estimate (₹)</th>
+                  <th>Approval</th>
+                  <th>Status</th>
+                  <th>Manage</th>
+                </tr>
+              </thead>
+              <tbody id="adm-repairs-tbody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 6. Review Moderation -->
+        <div id="adm-reviews" class="tab-view">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Product Review Moderation</h2>
+            <button class="btn btn-sm btn-outline" onclick="loadAdminReviews()">🔄 Refresh Reviews</button>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Author</th>
+                  <th>Rating</th>
+                  <th>Review Comment</th>
+                  <th>Type</th>
+                  <th>Approval</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adm-reviews-tbody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 7. Customers Section -->
+        <div id="adm-customers" class="tab-view">
+          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem;">Customer Accounts & Spending</h2>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Customer Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Orders Placed</th>
+                  <th>Registered</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adm-customers-tbody">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 8. Support Tickets -->
+        <div id="adm-tickets" class="tab-view">
+          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem;">Customer Support Tickets</h2>
+          <div id="adm-tickets-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add Product Modal -->
+  <div id="modal-add-product" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; overflow-y: auto; padding: 2rem 1rem;">
+    <div style="background: #fff; max-width: 650px; margin: auto; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.3rem; font-weight: 800;" id="prod-modal-title">Add New Catalog Product</h3>
+        <button class="btn btn-sm btn-outline" onclick="toggleAddProductModal()">✕</button>
+      </div>
+      <form id="form-add-product" onsubmit="submitProductForm(event)">
+        <input type="hidden" id="prod-edit-id" value="">
+        <div style="margin-bottom: 1rem;">
+          <label class="form-label">Category</label>
+          <select id="prod-cat" class="form-control" required>
+            <option value="1">Laptops</option>
+            <option value="8">🐧 Linux Laptops</option>
+            <option value="2">Pre-Built PCs</option>
+            <option value="4">Internal SSDs</option>
+            <option value="5">External SSDs</option>
+            <option value="3">Pen Drives</option>
+            <option value="9">🐧 Linux Pen Drives</option>
+            <option value="6">OS Pen Drives</option>
+            <option value="10">Gaming Mice</option>
+            <option value="11">Normal Mice</option>
+            <option value="12">Keyboards</option>
+            <option value="13">Gaming Chairs</option>
+            <option value="14">Office Chairs</option>
+            <option value="15">Mouse Pads</option>
+            <option value="16">Monitors</option>
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label class="form-label">Product Name</label>
+            <input type="text" id="prod-name" class="form-control" required placeholder="e.g. Acer Nitro 15 Gaming Laptop">
+          </div>
+          <div>
+            <label class="form-label">Brand</label>
+            <input type="text" id="prod-brand" class="form-control" required placeholder="e.g. Acer, ASUS, Kingston">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label class="form-label">SKU</label>
+            <input type="text" id="prod-sku" class="form-control" required placeholder="e.g. LAP-ACER-N5">
+          </div>
+          <div>
+            <label class="form-label">Price (₹)</label>
+            <input type="number" id="prod-price" class="form-control" required min="1" placeholder="74999">
+          </div>
+          <div>
+            <label class="form-label">Stock Quantity</label>
+            <input type="number" id="prod-stock" class="form-control" required min="0" value="10">
+          </div>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label class="form-label">Image URL</label>
+          <input type="url" id="prod-image" class="form-control" placeholder="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=700&q=80">
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <label class="form-label">Short Tagline</label>
+          <input type="text" id="prod-short" class="form-control" placeholder="Key feature summary in one line">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label class="form-label">Detailed Description</label>
+          <textarea id="prod-desc" class="form-control" rows="3" placeholder="Full product technical specifications and highlights"></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+          <button type="button" class="btn btn-outline" onclick="toggleAddProductModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="prod-submit-btn">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CSV Import Modal -->
+  <div id="modal-import-csv" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; overflow-y: auto; padding: 2rem 1rem;">
+    <div style="background: #fff; max-width: 500px; margin: auto; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.3rem; font-weight: 800;">Bulk Import Products (CSV)</h3>
+        <button class="btn btn-sm btn-outline" onclick="toggleImportCsvModal()">✕</button>
+      </div>
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Paste raw CSV text with headers: <code>name, brand, sku, price, stock_quantity</code>
+      </p>
+      <textarea id="csv-import-text" class="form-control" rows="8" placeholder='name,brand,sku,price,stock_quantity&#10;"Lenovo IdeaPad 3","Lenovo","LAP-LEN-IP3",45999,15'></textarea>
+      <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-outline" onclick="toggleImportCsvModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitCsvImport()">Process Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Coupon Modal -->
+  <div id="modal-add-coupon" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; overflow-y: auto; padding: 2rem 1rem;">
+    <div style="background: #fff; max-width: 500px; margin: auto; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.3rem; font-weight: 800;">Create Discount Coupon</h3>
+        <button class="btn btn-sm btn-outline" onclick="toggleAddCouponModal()">✕</button>
+      </div>
+      <form id="form-add-coupon" onsubmit="submitAddCoupon(event)">
+        <div style="margin-bottom: 1rem;">
+          <label class="form-label">Coupon Code (Uppercase)</label>
+          <input type="text" id="cp-code" class="form-control" required placeholder="e.g. FESTIVE20" style="text-transform: uppercase;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label class="form-label">Discount Type</label>
+            <select id="cp-type" class="form-control" required>
+              <option value="percentage">Percentage (%)</option>
+              <option value="fixed">Flat Amount (₹)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Discount Value</label>
+            <input type="number" id="cp-value" class="form-control" required min="1" placeholder="10 (for 10% or ₹10)">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label class="form-label">Min Order Amount (₹)</label>
+            <input type="number" id="cp-min" class="form-control" min="0" value="0" placeholder="1000">
+          </div>
+          <div>
+            <label class="form-label">Max Discount Cap (₹)</label>
+            <input type="number" id="cp-max" class="form-control" min="0" placeholder="Optional cap">
+          </div>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label class="form-label">Usage Limit</label>
+          <input type="number" id="cp-limit" class="form-control" min="1" value="500">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+          <button type="button" class="btn btn-outline" onclick="toggleAddCouponModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Coupon</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let token = '';
+    let allProducts = [];
+    let allOrders = [];
+
+    function switchAdminTab(tabId, el) {
+      document.querySelectorAll('.admin-menu-item').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.tab-view').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById(`adm-${tabId}`).classList.add('active');
+
+      if (tabId === 'overview') loadAdminStats();
+      if (tabId === 'products') loadAdminProducts();
+      if (tabId === 'orders') loadAdminOrders();
+      if (tabId === 'coupons') loadAdminCoupons();
+      if (tabId === 'repairs') loadAdminRepairs();
+      if (tabId === 'reviews') loadAdminReviews();
+      if (tabId === 'customers') loadAdminCustomers();
+      if (tabId === 'tickets') loadAdminTickets();
+    }
+
+    async function initAdmin() {
+      const user = TechFix.getUser();
+      token = TechFix.getToken();
+
+      if (!user || user.role !== 'admin' || !token) {
+        alert('Access denied: Admin credentials required.');
+        window.location.href = '/login.html';
+        return;
+      }
+
+      loadAdminStats();
+      loadAdminProducts();
+      loadAdminOrders();
+      loadAdminCoupons();
+      loadAdminRepairs();
+      loadAdminReviews();
+      loadAdminCustomers();
+      loadAdminTickets();
+    }
+
+    // 1. Business Overview Stats & Charts
+    async function loadAdminStats() {
+      try {
+        const res = await fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        if (data.success) {
+          const s = data.data;
+          document.getElementById('stat-revenue').textContent = TechFix.formatPrice(s.orders.total_revenue || 0);
+          document.getElementById('stat-orders').textContent = s.orders.total_orders;
+          document.getElementById('stat-products').textContent = s.totalProducts || 0;
+          document.getElementById('stat-customers').textContent = s.totalUsers || 0;
+          document.getElementById('stat-pending-orders').textContent = s.orders.pending_orders || 0;
+          document.getElementById('stat-completed-orders').textContent = s.orders.completed_orders || 0;
+          document.getElementById('stat-low-stock').textContent = s.lowStockCount || 0;
+          document.getElementById('stat-repairs').textContent = s.repairs.active_repairs || 0;
+
+          // Render Sales by Day Chart
+          const chartBox = document.getElementById('chart-sales-by-day');
+          const salesDays = s.salesByDay || [];
+          const maxRev = Math.max(...(salesDays.map(d => parseFloat(d.revenue))), 1);
+          chartBox.innerHTML = salesDays.map(d => {
+            const h = Math.max(8, Math.round((parseFloat(d.revenue) / maxRev) * 100));
+            return `
+              <div class="chart-bar-col">
+                <div class="chart-bar-fill" style="height: ${h}%;" title="₹${parseFloat(d.revenue).toLocaleString('en-IN')} (${d.order_count} orders)"></div>
+                <div class="chart-bar-label">${d.day.slice(5)}</div>
+              </div>
+            `;
+          }).join('') || '<div style="color:var(--text-muted); padding:2rem; width:100%; text-align:center;">No recent order data</div>';
+
+          // Orders by Status
+          const statusBox = document.getElementById('status-breakdown-list');
+          statusBox.innerHTML = (s.ordersByStatus || []).map(st => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem;">
+              <strong>${st.order_status}</strong>
+              <span class="badge badge-primary">${st.count} orders</span>
+            </div>
+          `).join('');
+
+          // Top Selling Products
+          const topProdBox = document.getElementById('top-products-list');
+          topProdBox.innerHTML = (s.topProducts || []).map((tp, idx) => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem;">
+              <span>${idx + 1}. <strong>${tp.product_name_snapshot}</strong></span>
+              <span><strong>${tp.total_qty} units</strong> (₹${parseFloat(tp.total_sales).toLocaleString('en-IN')})</span>
+            </div>
+          `).join('') || '<p style="color:var(--text-muted); font-size:0.85rem;">No orders yet</p>';
+
+          // Category Revenue
+          const catRevBox = document.getElementById('category-revenue-list');
+          catRevBox.innerHTML = (s.revenueByCategory || []).map(cr => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem;">
+              <strong>${cr.category_name}</strong>
+              <span>₹${parseFloat(cr.revenue).toLocaleString('en-IN')} (${cr.items_sold} sold)</span>
+            </div>
+          `).join('') || '<p style="color:var(--text-muted); font-size:0.85rem;">No category data yet</p>';
+        }
+      } catch (e) {
+        console.error('Stats error:', e);
+      }
+    }
+
+    // 2. Product Management
+    async function loadAdminProducts() {
+      try {
+        const res = await fetch('/api/admin/products', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        if (data.success) {
+          allProducts = data.data;
+          renderAdminProducts(allProducts);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderAdminProducts(prods) {
+      const tbody = document.getElementById('adm-products-tbody');
+      document.getElementById('adm-products-count').textContent = `Showing ${prods.length} products in database.`;
+
+      tbody.innerHTML = prods.map(p => `
+        <tr>
+          <td>
+            <strong>${p.name}</strong><br>
+            <small style="color:var(--text-muted);">Brand: ${p.brand} | SKU: <code>${p.sku}</code></small>
+          </td>
+          <td>${p.category_name || 'Hardware'}</td>
+          <td>
+            <strong>${TechFix.formatPrice(p.price)}</strong>
+            ${p.compare_at_price ? `<br><small style="color:var(--text-light); text-decoration:line-through;">₹${parseFloat(p.compare_at_price).toLocaleString('en-IN')}</small>` : ''}
+          </td>
+          <td>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="number" value="${p.stock_quantity}" min="0" style="width: 70px; padding: 0.25rem 0.4rem; font-weight: 700; border: 1.5px solid var(--border); border-radius:4px;" onblur="updateProductStock(${p.id}, this.value)">
+              ${p.stock_quantity <= 0 ? '<span class="badge badge-danger">Out of Stock</span>' : (p.stock_quantity <= 5 ? '<span class="badge badge-warning">Low Stock</span>' : '')}
+            </div>
+          </td>
+          <td>
+            <span class="badge ${p.active ? 'badge-success' : 'badge-danger'}">
+              ${p.active ? 'Active' : 'Disabled'}
+            </span>
+          </td>
+          <td>
+            <div style="display: flex; gap: 0.35rem;">
+              <button class="btn btn-sm btn-outline" onclick="openEditProductModal(${p.id})">Edit</button>
+              <button class="btn btn-sm btn-outline" onclick="toggleProductActive(${p.id}, ${!p.active})">
+                ${p.active ? 'Disable' : 'Enable'}
+              </button>
+              <button class="btn btn-sm btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="deleteProduct(${p.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterAdminProducts() {
+      const q = document.getElementById('adm-prod-search').value.toLowerCase().trim();
+      const cat = document.getElementById('adm-prod-cat-filter').value;
+      const stock = document.getElementById('adm-prod-stock-filter').value;
+      const status = document.getElementById('adm-prod-status-filter').value;
+
+      const filtered = allProducts.filter(p => {
+        const matchesQ = !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q));
+        const matchesCat = !cat || (p.category_slug === cat || (p.category_name && p.category_name.toLowerCase().includes(cat)));
+        let matchesStock = true;
+        if (stock === 'in_stock') matchesStock = p.stock_quantity > 0;
+        if (stock === 'low_stock') matchesStock = p.stock_quantity > 0 && p.stock_quantity <= 5;
+        if (stock === 'out_of_stock') matchesStock = p.stock_quantity === 0;
+        let matchesStatus = true;
+        if (status === 'active') matchesStatus = p.active === true;
+        if (status === 'inactive') matchesStatus = p.active === false;
+
+        return matchesQ && matchesCat && matchesStock && matchesStatus;
+      });
+
+      renderAdminProducts(filtered);
+    }
+
+    async function updateProductStock(id, stock_quantity) {
+      const qty = parseInt(stock_quantity, 10);
+      if (isNaN(qty) || qty < 0) return alert('Invalid stock quantity');
+      try {
+        const res = await fetch(`/api/admin/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ stock_quantity: qty })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Stock quantity updated in PostgreSQL.', 'success');
+          loadAdminProducts();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function toggleProductActive(id, active) {
+      try {
+        const res = await fetch(`/api/admin/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ active })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Product visibility updated.', 'success');
+          loadAdminProducts();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('Are you sure you want to delete or deactivate this product?')) return;
+      try {
+        const res = await fetch(`/api/admin/products/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast(data.message, 'success');
+          loadAdminProducts();
+        } else {
+          alert(data.message || 'Failed to delete product.');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function toggleAddProductModal() {
+      const modal = document.getElementById('modal-add-product');
+      document.getElementById('prod-edit-id').value = '';
+      document.getElementById('prod-modal-title').textContent = 'Add New Catalog Product';
+      document.getElementById('form-add-product').reset();
+      modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function openEditProductModal(id) {
+      const p = allProducts.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('prod-edit-id').value = p.id;
+      document.getElementById('prod-modal-title').textContent = `Edit Product #${p.id} — ${p.name}`;
+      document.getElementById('prod-cat').value = p.category_id || 1;
+      document.getElementById('prod-name').value = p.name;
+      document.getElementById('prod-brand').value = p.brand;
+      document.getElementById('prod-sku').value = p.sku;
+      document.getElementById('prod-price').value = p.price;
+      document.getElementById('prod-stock').value = p.stock_quantity;
+      document.getElementById('prod-image').value = p.image_url || '';
+      document.getElementById('prod-short').value = p.short_description || '';
+      document.getElementById('prod-desc').value = p.description || '';
+      document.getElementById('modal-add-product').style.display = 'block';
+    }
+
+    async function submitProductForm(e) {
+      e.preventDefault();
+      const editId = document.getElementById('prod-edit-id').value;
+      const name = document.getElementById('prod-name').value.trim();
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const body = {
+        category_id: document.getElementById('prod-cat').value,
+        name: name,
+        slug: slug,
+        brand: document.getElementById('prod-brand').value.trim(),
+        sku: document.getElementById('prod-sku').value.trim(),
+        price: document.getElementById('prod-price').value,
+        stock_quantity: document.getElementById('prod-stock').value,
+        image_url: document.getElementById('prod-image').value.trim() || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=700&q=80',
+        short_description: document.getElementById('prod-short').value.trim(),
+        description: document.getElementById('prod-desc').value.trim(),
+        active: true
+      };
+
+      try {
+        const url = editId ? `/api/admin/products/${editId}` : '/api/admin/products';
+        const method = editId ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast(editId ? 'Product updated successfully!' : 'Product added successfully!', 'success');
+          document.getElementById('modal-add-product').style.display = 'none';
+          document.getElementById('form-add-product').reset();
+          loadAdminProducts();
+        } else {
+          alert(data.message || 'Failed to save product.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // CSV Import / Export
+    function toggleImportCsvModal() {
+      const modal = document.getElementById('modal-import-csv');
+      modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function submitCsvImport() {
+      const text = document.getElementById('csv-import-text').value.trim();
+      if (!text) return alert('Please paste CSV data');
+
+      try {
+        const res = await fetch('/api/admin/products/import/csv', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain', 'Authorization': `Bearer ${token}` },
+          body: text
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+          toggleImportCsvModal();
+          loadAdminProducts();
+        } else {
+          alert(data.message || 'Import failed.');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // 3. Orders Management
+    async function loadAdminOrders() {
+      try {
+        const res = await fetch('/api/admin/orders', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        if (data.success) {
+          allOrders = data.data;
+          renderAdminOrders(allOrders);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderAdminOrders(orders) {
+      const tbody = document.getElementById('adm-orders-tbody');
+      tbody.innerHTML = orders.map(ord => {
+        const itemsList = (ord.items || []).map(it => `• ${it.product_name_snapshot} (x${it.quantity})`).join('<br>');
+        const couponBadge = ord.coupon_code ? `<span class="badge badge-primary" style="display:inline-block; margin-top:4px;">🎟️ ${ord.coupon_code} (-₹${parseFloat(ord.discount_amount || 0).toLocaleString('en-IN')})</span>` : '';
+        return `
+          <tr>
+            <td>
+              <strong>${ord.order_number}</strong><br>
+              <small style="color:var(--text-muted);">${new Date(ord.created_at).toLocaleDateString('en-IN')}</small>
+            </td>
+            <td>${ord.customer_name}<br><small style="color:var(--text-muted);">${ord.customer_phone}</small></td>
+            <td>${ord.city} (${ord.pincode})</td>
+            <td>
+              <div style="font-size: 0.8rem; max-width: 250px;">${itemsList || 'N/A'}</div>
+              ${couponBadge}
+            </td>
+            <td><strong>${TechFix.formatPrice(ord.total)}</strong></td>
+            <td>
+              <span class="badge ${ord.payment_status === 'collected' ? 'badge-success' : 'badge-warning'}">${ord.payment_status}</span><br>
+              <button class="btn btn-sm btn-outline" style="font-size:0.75rem; margin-top:4px; padding:0.15rem 0.4rem;" onclick="updatePaymentStatus(${ord.id}, '${ord.payment_status === 'collected' ? 'pending' : 'collected'}')">
+                ${ord.payment_status === 'collected' ? 'Mark Unpaid' : 'Mark Paid (COD)'}
+              </button>
+            </td>
+            <td>
+              <select onchange="updateOrderStatus(${ord.id}, this.value)" class="form-control" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; font-weight: 700;">
+                ${['Order Placed', 'Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Completed', 'Cancelled'].map(st => `
+                  <option value="${st}" ${ord.order_status === st ? 'selected' : ''}>${st}</option>
+                `).join('')}
+              </select>
+            </td>
+            <td>
+              <a href="/api/orders/${ord.order_number}/invoice" target="_blank" class="btn btn-sm btn-outline" title="Print Invoice">
+                📄 Invoice
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterAdminOrders() {
+      const q = document.getElementById('adm-order-search').value.toLowerCase().trim();
+      const status = document.getElementById('adm-order-status-filter').value;
+
+      const filtered = allOrders.filter(ord => {
+        const matchesQ = !q || ord.order_number.toLowerCase().includes(q) || ord.customer_name.toLowerCase().includes(q) || ord.customer_phone.includes(q);
+        const matchesStatus = !status || ord.order_status === status;
+        return matchesQ && matchesStatus;
+      });
+
+      renderAdminOrders(filtered);
+    }
+
+    async function updateOrderStatus(orderId, order_status) {
+      try {
+        const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ order_status })
+        });
+        const data = await res.json();
+        if (data.success) TechFix.showToast('Order status updated.', 'success');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function updatePaymentStatus(orderId, payment_status) {
+      try {
+        const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ payment_status })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Payment status updated.', 'success');
+          loadAdminOrders();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // 4. Coupons Management
+    async function loadAdminCoupons() {
+      try {
+        const res = await fetch('/api/admin/coupons', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        const tbody = document.getElementById('adm-coupons-tbody');
+        if (data.success && tbody) {
+          tbody.innerHTML = data.data.map(cp => `
+            <tr>
+              <td><strong style="color:var(--primary);">${cp.code}</strong></td>
+              <td>${cp.discount_type === 'percentage' ? `${cp.discount_value}% OFF` : `₹${parseFloat(cp.discount_value).toLocaleString('en-IN')} Flat OFF`}</td>
+              <td>₹${parseFloat(cp.min_order_amount || 0).toLocaleString('en-IN')}</td>
+              <td>${cp.max_discount_amount ? `₹${parseFloat(cp.max_discount_amount).toLocaleString('en-IN')}` : 'No limit'}</td>
+              <td>${cp.times_used} / ${cp.usage_limit}</td>
+              <td>
+                <span class="badge ${cp.active ? 'badge-success' : 'badge-danger'}">
+                  ${cp.active ? 'Active' : 'Disabled'}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline" onclick="toggleCouponActive(${cp.id}, ${!cp.active})">
+                  ${cp.active ? 'Disable' : 'Enable'}
+                </button>
+                <button class="btn btn-sm btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="deleteCoupon(${cp.id})">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('Error loading coupons:', e);
+      }
+    }
+
+    function toggleAddCouponModal() {
+      const modal = document.getElementById('modal-add-coupon');
+      modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function submitAddCoupon(e) {
+      e.preventDefault();
+      const body = {
+        code: document.getElementById('cp-code').value.trim().toUpperCase(),
+        discount_type: document.getElementById('cp-type').value,
+        discount_value: document.getElementById('cp-value').value,
+        min_order_amount: document.getElementById('cp-min').value || 0,
+        max_discount_amount: document.getElementById('cp-max').value || null,
+        usage_limit: document.getElementById('cp-limit').value || 500,
+        active: true
+      };
+
+      try {
+        const res = await fetch('/api/admin/coupons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Coupon created successfully!', 'success');
+          toggleAddCouponModal();
+          document.getElementById('form-add-coupon').reset();
+          loadAdminCoupons();
+        } else {
+          alert(data.message || 'Failed to create coupon.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function toggleCouponActive(id, active) {
+      try {
+        const res = await fetch(`/api/admin/coupons/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ active })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Coupon status updated.', 'success');
+          loadAdminCoupons();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function deleteCoupon(id) {
+      if (!confirm('Are you sure you want to delete this coupon?')) return;
+      try {
+        const res = await fetch(`/api/admin/coupons/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Coupon deleted.', 'success');
+          loadAdminCoupons();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // 5. Repairs Workbench
+    async function loadAdminRepairs() {
+      try {
+        const res = await fetch('/api/admin/repairs', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        const tbody = document.getElementById('adm-repairs-tbody');
+
+        if (data.success) {
+          tbody.innerHTML = data.data.map(rep => `
+            <tr>
+              <td><strong>${rep.request_number}</strong></td>
+              <td>${rep.customer_name}<br><small style="color:var(--text-muted);">${rep.customer_phone}</small></td>
+              <td>${rep.device_type} (${rep.brand})<br><small style="color:var(--text-muted);">${rep.problem_category}</small></td>
+              <td>${new Date(rep.pickup_date).toLocaleDateString('en-IN')}<br><small>${rep.pickup_time}</small></td>
+              <td>
+                <input type="number" value="${rep.estimate_amount || ''}" placeholder="Set ₹" style="width: 85px; padding: 0.2rem;" onblur="updateRepairEstimate(${rep.id}, this.value)">
+              </td>
+              <td>
+                ${rep.customer_approved === true ? '<span class="badge badge-success">Approved</span>' :
+                  rep.customer_approved === false ? '<span class="badge badge-danger">Declined</span>' : '<span class="badge badge-warning">Pending</span>'}
+              </td>
+              <td>
+                <select onchange="updateRepairStatus(${rep.id}, this.value)" class="form-control" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                  ${['Request Received', 'Pickup Scheduled', 'Picked Up', 'Diagnosis', 'Estimate Prepared', 'Customer Approval Required', 'Repair In Progress', 'Ready for Delivery', 'Out for Delivery', 'Delivered', 'Cancelled'].map(st => `
+                    <option value="${st}" ${rep.status === st ? 'selected' : ''}>${st}</option>
+                  `).join('')}
+                </select>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline" onclick="addDiagnosisNote(${rep.id}, '${(rep.diagnosis || '').replace(/'/g, "\\'")}')">Diagnosis Note</button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function updateRepairStatus(id, status) {
+      try {
+        const res = await fetch(`/api/admin/repairs/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (data.success) TechFix.showToast('Repair status updated.', 'success');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function updateRepairEstimate(id, estimate_amount) {
+      if (!estimate_amount) return;
+      try {
+        const res = await fetch(`/api/admin/repairs/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ estimate_amount: parseFloat(estimate_amount), status: 'Estimate Prepared' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Estimate amount saved & updated status.', 'success');
+          loadAdminRepairs();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function addDiagnosisNote(id, currentNote) {
+      const note = prompt('Enter technical diagnosis findings:', currentNote);
+      if (note === null) return;
+      try {
+        const res = await fetch(`/api/admin/repairs/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ diagnosis: note })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Diagnosis updated.', 'success');
+          loadAdminRepairs();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // 6. Review Moderation
+    async function loadAdminReviews() {
+      try {
+        const res = await fetch('/api/admin/reviews', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        const tbody = document.getElementById('adm-reviews-tbody');
+        if (data.success && tbody) {
+          tbody.innerHTML = data.data.map(r => `
+            <tr>
+              <td><strong>${r.product_name}</strong></td>
+              <td>${r.author_name}</td>
+              <td style="color:#f59e0b;">${'★'.repeat(r.rating)} (${r.rating}/5)</td>
+              <td style="max-width:300px; font-size:0.85rem;">${r.review}</td>
+              <td>
+                <span class="badge ${r.user_id ? 'badge-success' : 'badge-primary'}">
+                  ${r.user_id ? 'Verified Order' : 'Sample Data'}
+                </span>
+              </td>
+              <td>
+                <span class="badge ${r.approved ? 'badge-success' : 'badge-warning'}">
+                  ${r.approved ? 'Approved' : 'Pending'}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline" onclick="toggleReviewApprove(${r.id}, ${!r.approved})">
+                  ${r.approved ? 'Hide' : 'Approve'}
+                </button>
+                <button class="btn btn-sm btn-outline" style="color:var(--danger);" onclick="deleteReview(${r.id})">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('Error loading reviews:', e);
+      }
+    }
+
+    async function toggleReviewApprove(id, approved) {
+      try {
+        const res = await fetch(`/api/admin/reviews/${id}/approve`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ approved })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Review visibility updated.', 'success');
+          loadAdminReviews();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function deleteReview(id) {
+      if (!confirm('Are you sure you want to delete this review?')) return;
+      try {
+        const res = await fetch(`/api/admin/reviews/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Review deleted.', 'success');
+          loadAdminReviews();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // 7. Customers Section
+    async function loadAdminCustomers() {
+      try {
+        const res = await fetch('/api/admin/customers', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        const tbody = document.getElementById('adm-customers-tbody');
+
+        if (data.success) {
+          tbody.innerHTML = data.data.map(c => `
+            <tr>
+              <td>#${c.id}</td>
+              <td><strong>${c.name}</strong></td>
+              <td>${c.email}</td>
+              <td>${c.phone || 'N/A'}</td>
+              <td><span class="badge badge-primary">${c.order_count} orders</span></td>
+              <td>${new Date(c.created_at).toLocaleDateString('en-IN')}</td>
+              <td><span class="badge ${c.status === 'active' ? 'badge-success' : 'badge-danger'}">${c.status}</span></td>
+              <td>
+                <button class="btn btn-sm btn-outline" onclick="toggleCustomerStatus(${c.id}, '${c.status === 'active' ? 'disabled' : 'active'}')">
+                  ${c.status === 'active' ? 'Disable' : 'Enable'}
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function toggleCustomerStatus(id, status) {
+      try {
+        const res = await fetch(`/api/admin/customers/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast(data.message, 'success');
+          loadAdminCustomers();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // 8. Support Tickets
+    async function loadAdminTickets() {
+      try {
+        const res = await fetch('/api/admin/tickets', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        const container = document.getElementById('adm-tickets-container');
+
+        if (data.success) {
+          container.innerHTML = data.data.map(t => `
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.25rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <div>
+                  <strong>${t.ticket_number}</strong> — ${t.customer_name} (${t.customer_email})
+                </div>
+                <span class="badge ${t.status === 'Resolved' ? 'badge-success' : 'badge-warning'}">${t.status}</span>
+              </div>
+              <h4 style="margin-bottom: 0.5rem;">${t.subject}</h4>
+              <div style="background: #f8fafc; padding: 1rem; border-radius: 6px; font-size: 0.875rem; margin-bottom: 1rem;">
+                ${t.messages.map(m => `
+                  <div style="margin-bottom: 0.5rem;">
+                    <strong>${m.sender_name}:</strong> ${m.message}
+                  </div>
+                `).join('')}
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="ticket-reply-${t.id}" placeholder="Type support staff reply..." class="form-control" style="flex:1;">
+                <button class="btn btn-sm btn-primary" onclick="replyAdminTicket(${t.id})">Send Staff Reply</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function replyAdminTicket(ticketId) {
+      const msgInput = document.getElementById(`ticket-reply-${ticketId}`);
+      const message = msgInput.value.trim();
+      if (!message) return;
+
+      try {
+        const res = await fetch(`/api/support/tickets/${ticketId}/reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Staff reply dispatched.', 'success');
+          loadAdminTickets();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initAdmin);
+  </script>
+</body>
+</html>

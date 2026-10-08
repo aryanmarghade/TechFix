@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Dashboard & My Orders — TechFix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .account-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 2.5rem;
+      margin: 2.5rem 0 5rem 0;
+    }
+    .account-menu {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      height: fit-content;
+    }
+    .menu-item {
+      padding: 0.85rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .menu-item:hover, .menu-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+    @media (max-width: 860px) {
+      .account-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-main">
+      <a href="/index.html" class="logo">
+        <span class="logo-badge">TF</span>
+        <span>TECH<span class="text-fix">FIX</span></span>
+      </a>
+
+      <div class="header-actions">
+        <button class="btn btn-outline btn-sm" onclick="TechFix.logout()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="account-layout">
+      <!-- Navigation Tabs -->
+      <aside class="account-menu">
+        <div style="padding: 1.25rem; background: var(--dark); color: #fff;">
+          <div style="font-size: 0.8rem; color: #94a3b8;">Logged in as:</div>
+          <strong id="acc-user-name" style="font-size: 1.05rem;">Loading...</strong>
+          <div id="acc-user-email" style="font-size: 0.8rem; color: #cbd5e1; word-break: break-all;">...</div>
+        </div>
+        <div class="menu-item active" onclick="switchTab('orders', this)">📦 My Orders</div>
+        <div class="menu-item" onclick="switchTab('wishlist', this)">❤️ My Wishlist</div>
+        <div class="menu-item" onclick="switchTab('repairs', this)">🔧 Repair Requests</div>
+        <div class="menu-item" onclick="switchTab('builds', this)">⚡ Saved PC Builds</div>
+        <div class="menu-item" onclick="switchTab('tickets', this)">💬 Support Tickets</div>
+        <div class="menu-item" onclick="switchTab('profile', this)">👤 Profile Settings</div>
+        <div class="menu-item" onclick="switchTab('addresses', this)">📍 Saved Addresses</div>
+        <div class="menu-item" onclick="switchTab('password', this)">🔒 Change Password</div>
+      </aside>
+
+      <!-- Tab Panes -->
+      <div>
+        <!-- 1. Orders Tab -->
+        <div id="pane-orders" class="tab-pane active">
+          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem;">Order History</h2>
+          <div id="orders-list-container">
+            <div style="text-align: center; padding: 2rem;">Loading orders...</div>
+          </div>
+        </div>
+
+        <!-- 1.5 Wishlist Tab -->
+        <div id="pane-wishlist" class="tab-pane">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">My Wishlist & Saved Products</h2>
+            <a href="/shop.html" class="btn btn-outline btn-sm">Explore Catalog</a>
+          </div>
+          <div id="wishlist-list-container">
+            <div style="text-align: center; padding: 2rem;">Loading wishlist...</div>
+          </div>
+        </div>
+
+        <!-- 2. Repairs Tab -->
+        <div id="pane-repairs" class="tab-pane">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">My Repair Requests</h2>
+            <a href="/repair.html" class="btn btn-primary btn-sm">+ Book New Repair</a>
+          </div>
+          <div id="repairs-list-container">
+            <div style="text-align: center; padding: 2rem;">Loading repairs...</div>
+          </div>
+        </div>
+
+        <!-- 3. Saved Builds Tab -->
+        <div id="pane-builds" class="tab-pane">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Saved PC Builds</h2>
+            <a href="/build-pc.html" class="btn btn-accent btn-sm">Launch PC Builder</a>
+          </div>
+          <div id="builds-list-container">
+            <div style="text-align: center; padding: 2rem;">Loading saved builds...</div>
+          </div>
+        </div>
+
+        <!-- 4. Support Tickets Tab -->
+        <div id="pane-tickets" class="tab-pane">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Support Inquiries</h2>
+            <a href="/help.html#support-ticket-form-card" class="btn btn-primary btn-sm">+ New Support Ticket</a>
+          </div>
+          <div id="tickets-list-container">
+            <div style="text-align: center; padding: 2rem;">Loading support tickets...</div>
+          </div>
+        </div>
+
+        <!-- 5. Profile Tab -->
+        <div id="pane-profile" class="tab-pane">
+          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem;">Profile Settings</h2>
+          <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; max-width: 540px;">
+            <form id="profile-edit-form" onsubmit="handleUpdateProfile(event)">
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="prof-name" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address (Read-only)</label>
+                <input type="email" id="prof-email" class="form-control" disabled style="background: #f1f5f9; cursor: not-allowed;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" id="prof-phone" class="form-control" pattern="[0-9]{10}" placeholder="10-digit mobile" required>
+              </div>
+              <button type="submit" id="prof-btn" class="btn btn-primary">Save Profile Changes</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 6. Addresses Tab -->
+        <div id="pane-addresses" class="tab-pane">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800;">Saved Delivery Addresses</h2>
+            <button class="btn btn-primary btn-sm" onclick="toggleNewAddressForm()">+ Add New Address</button>
+          </div>
+
+          <div id="new-address-card" style="display: none; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Add Delivery Address</h3>
+            <form onsubmit="handleAddAddress(event)">
+              <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label">Recipient Name *</label>
+                  <input type="text" id="addr-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Phone Number *</label>
+                  <input type="tel" id="addr-phone" class="form-control" pattern="[0-9]{10}" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">House / Flat / Building No. *</label>
+                <input type="text" id="addr-line1" class="form-control" placeholder="e.g. Flat 402, Sunshine Heights" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Street / Area / Landmark</label>
+                <input type="text" id="addr-line2" class="form-control" placeholder="e.g. Opposite City Park, Lamington Road">
+              </div>
+              <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label">City *</label>
+                  <input type="text" id="addr-city" class="form-control" value="Mumbai" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">State *</label>
+                  <input type="text" id="addr-state" class="form-control" value="Maharashtra" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Pincode *</label>
+                  <input type="text" id="addr-pincode" class="form-control" pattern="[0-9]{6}" placeholder="400001" required>
+                </div>
+              </div>
+              <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                <button type="submit" class="btn btn-accent btn-sm">Save Address</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="toggleNewAddressForm()">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="addresses-list-container">
+            <div style="text-align: center; padding: 2rem;">Loading addresses...</div>
+          </div>
+        </div>
+
+        <!-- 7. Change Password Tab -->
+        <div id="pane-password" class="tab-pane">
+          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.25rem;">Change Password</h2>
+          <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; max-width: 500px;">
+            <form onsubmit="handleChangePassword(event)">
+              <div class="form-group">
+                <label class="form-label">Current Password *</label>
+                <input type="password" id="pw-current" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">New Password *</label>
+                <input type="password" id="pw-new" class="form-control" minlength="6" placeholder="At least 6 characters" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Confirm New Password *</label>
+                <input type="password" id="pw-confirm" class="form-control" minlength="6" placeholder="Re-enter new password" required>
+              </div>
+              <button type="submit" id="pw-btn" class="btn btn-accent">Update Password</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById(`pane-${tabId}`).classList.add('active');
+    }
+
+    async function initAccount() {
+      const user = TechFix.getUser();
+      const token = TechFix.getToken();
+
+      if (!user || !token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      document.getElementById('acc-user-name').textContent = user.name;
+      document.getElementById('acc-user-email').textContent = user.email;
+
+      // Load all tabs
+      loadOrders(token);
+      loadWishlist(token);
+      loadRepairs(token);
+      loadBuilds(token);
+      loadTickets(token);
+    }
+
+    async function loadWishlist(token) {
+      try {
+        const res = await fetch('/api/products/wishlist/my', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const container = document.getElementById('wishlist-list-container');
+
+        if (!data.success || data.data.length === 0) {
+          container.innerHTML = '<div style="background: #fff; padding: 2.5rem; border-radius: 8px; border: 1px dashed var(--border); text-align: center; color: var(--text-muted);">Your wishlist is empty. Save items you like by clicking the ❤️ Wishlist button on any product!</div>';
+          return;
+        }
+
+        container.innerHTML = `
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem;">
+            ${data.data.map(p => `
+              <div class="product-card" style="margin-bottom: 0;">
+                <div class="product-card-image">
+                  <a href="/product.html?slug=${p.slug}">
+                    <img src="${p.image_url}" alt="${p.name}">
+                  </a>
+                </div>
+                <div class="product-card-body">
+                  <span class="product-category">${p.category_name}</span>
+                  <h3 class="product-title"><a href="/product.html?slug=${p.slug}">${p.name}</a></h3>
+                  <div class="product-price-row">
+                    <span class="product-price">${TechFix.formatPrice(p.price)}</span>
+                  </div>
+                  <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                    <button class="btn btn-sm btn-primary" style="flex:1;" onclick="moveToCartFromWishlist(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                      Add to Cart
+                    </button>
+                    <button class="btn btn-sm btn-outline" style="color:var(--danger);" onclick="removeFromWishlist(${p.id})">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (e) {
+        console.error('Load wishlist error:', e);
+      }
+    }
+
+    async function moveToCartFromWishlist(product) {
+      TechFix.addToCart(product, 1);
+      await removeFromWishlist(product.id);
+    }
+
+    async function removeFromWishlist(productId) {
+      const token = TechFix.getToken();
+      try {
+        const res = await fetch('/api/products/wishlist/toggle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ productId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Wishlist updated.', 'success');
+          loadWishlist(token);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadOrders(token) {
+      try {
+        const res = await fetch('/api/orders/my-orders', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const container = document.getElementById('orders-list-container');
+
+        if (!data.success || data.data.length === 0) {
+          container.innerHTML = '<div style="background: #fff; padding: 2.5rem; border-radius: 8px; border: 1px dashed var(--border); text-align: center; color: var(--text-muted);">No orders found. Explore our <a href="/shop.html" style="color: var(--primary); font-weight: 700;">store</a> to place your first COD order!</div>';
+          return;
+        }
+
+        container.innerHTML = data.data.map(ord => `
+          <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.85rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <strong style="color: var(--primary); font-size: 1.05rem;">${ord.order_number}</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 0.5rem;">Placed on: ${new Date(ord.created_at).toLocaleDateString('en-IN')}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="badge ${ord.order_status === 'Delivered' ? 'badge-success' : 'badge-primary'}">${ord.order_status}</span>
+                <a href="/track-order.html?orderNumber=${ord.order_number}" class="btn btn-sm btn-outline">Track</a>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              ${ord.items.map(item => `
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.35rem;">
+                  <span>${item.product_name_snapshot} × ${item.quantity}</span>
+                  <strong>${TechFix.formatPrice(item.line_total)}</strong>
+                </div>
+              `).join('')}
+            </div>
+
+            <div style="border-top: 1px solid var(--border); padding-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.85rem; color: #166534; font-weight: 600;">💵 Mode: Cash On Delivery (${ord.payment_status})</span>
+              <strong style="font-size: 1.15rem; color: var(--dark);">Total: ${TechFix.formatPrice(ord.total)}</strong>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Load orders error:', e);
+      }
+    }
+
+    async function loadRepairs(token) {
+      try {
+        const res = await fetch('/api/repairs/my-repairs', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const container = document.getElementById('repairs-list-container');
+
+        if (!data.success || data.data.length === 0) {
+          container.innerHTML = '<div style="background: #fff; padding: 2.5rem; border-radius: 8px; border: 1px dashed var(--border); text-align: center; color: var(--text-muted);">No repair requests on record. Need help with a laptop or desktop? <a href="/repair.html" style="color: var(--primary); font-weight: 700;">Book a pickup</a>.</div>';
+          return;
+        }
+
+        container.innerHTML = data.data.map(rep => `
+          <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.85rem; margin-bottom: 1rem;">
+              <div>
+                <strong style="color: var(--primary); font-size: 1.05rem;">${rep.request_number}</strong>
+                <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">${rep.device_type} (${rep.brand} ${rep.model})</span>
+              </div>
+              <span class="badge badge-primary">${rep.status}</span>
+            </div>
+
+            <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.75rem;">
+              <strong>Issue:</strong> ${rep.problem_category} — <em>${rep.problem_description}</em>
+            </p>
+
+            ${rep.estimate_amount ? `
+              <div style="background: #f8fafc; padding: 0.85rem; border-radius: 6px; font-size: 0.85rem; margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <strong>Estimate: ${TechFix.formatPrice(rep.estimate_amount)}</strong>
+                  <div style="color: var(--text-muted); font-size: 0.8rem;">Diagnosis: ${rep.diagnosis || 'Standard hardware servicing'}</div>
+                </div>
+                <div>
+                  ${rep.customer_approved === true ? '<span class="badge badge-success">Approved</span>' :
+                    rep.customer_approved === false ? '<span class="badge badge-danger">Declined</span>' : `
+                    <button class="btn btn-sm btn-accent" onclick="approveRepairEstimate(${rep.id}, true)">Approve (₹${rep.estimate_amount})</button>
+                  `}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Load repairs error:', e);
+      }
+    }
+
+    async function loadBuilds(token) {
+      try {
+        const res = await fetch('/api/builder/my-builds', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const container = document.getElementById('builds-list-container');
+
+        if (!data.success || data.data.length === 0) {
+          container.innerHTML = '<div style="background: #fff; padding: 2.5rem; border-radius: 8px; border: 1px dashed var(--border); text-align: center; color: var(--text-muted);">No saved custom PC configurations. Use our <a href="/build-pc.html" style="color: var(--primary); font-weight: 700;">PC Builder</a> to craft and save your build!</div>';
+          return;
+        }
+
+        container.innerHTML = data.data.map(b => `
+          <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <strong style="font-size: 1.1rem; color: var(--dark);">${b.name}</strong>
+              <strong style="font-size: 1.15rem; color: var(--primary);">${TechFix.formatPrice(b.total_price)}</strong>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+              Saved on: ${new Date(b.created_at).toLocaleDateString('en-IN')}
+            </div>
+            <button class="btn btn-sm btn-accent" onclick="loadAndAddBuildToCart(${JSON.stringify(b).replace(/"/g, '&quot;')})">
+              Add Saved Build to Cart (COD)
+            </button>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Load builds error:', e);
+      }
+    }
+
+    async function loadTickets(token) {
+      try {
+        const res = await fetch('/api/support/tickets/my-tickets', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const container = document.getElementById('tickets-list-container');
+
+        if (!data.success || data.data.length === 0) {
+          container.innerHTML = '<div style="background: #fff; padding: 2.5rem; border-radius: 8px; border: 1px dashed var(--border); text-align: center; color: var(--text-muted);">No support tickets. Need help? <a href="/help.html" style="color: var(--primary); font-weight: 700;">Submit a ticket</a>.</div>';
+          return;
+        }
+
+        container.innerHTML = data.data.map(t => `
+          <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+              <div>
+                <strong style="color: var(--primary);">${t.ticket_number}</strong>
+                <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">${t.category}</span>
+              </div>
+              <span class="badge ${t.status === 'Resolved' ? 'badge-success' : 'badge-warning'}">${t.status}</span>
+            </div>
+            <h4 style="font-size: 1rem; margin-bottom: 0.4rem;">${t.subject}</h4>
+            <div style="background: #f8fafc; padding: 1rem; border-radius: 6px; font-size: 0.875rem; margin-top: 0.5rem;">
+              ${t.messages.map(m => `
+                <div style="margin-bottom: 0.6rem; padding-bottom: 0.6rem; border-bottom: 1px dashed var(--border);">
+                  <strong>${m.sender_name} ${m.is_admin ? '<span class="badge badge-primary" style="font-size:0.65rem;">Staff</span>' : ''}:</strong>
+                  <p style="margin-top: 0.2rem; color: var(--text-main);">${m.message}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Load tickets error:', e);
+      }
+    }
+
+    function loadAndAddBuildToCart(build) {
+      TechFix.addToCart({
+        id: 99999,
+        name: build.name,
+        price: build.total_price,
+        brand: 'TechFix Custom Rig',
+        image_url: 'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=600&auto=format&fit=crop&q=80',
+        stock_quantity: 5
+      }, 1, {
+        name: build.name,
+        total_price: build.total_price,
+        components: build.configuration
+      });
+      window.location.href = '/cart.html';
+    }
+
+    async function approveRepairEstimate(repairId, approved) {
+      const token = TechFix.getToken();
+      try {
+        const res = await fetch(`/api/repairs/${repairId}/approve-estimate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ approved })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast(data.message, 'success');
+          loadRepairs(token);
+        }
+      } catch (e) {
+        console.error('Approve estimate error:', e);
+      }
+    }
+
+    // Profile Settings
+    function loadProfile() {
+      const user = TechFix.getUser();
+      if (user) {
+        document.getElementById('prof-name').value = user.name || '';
+        document.getElementById('prof-email').value = user.email || '';
+        document.getElementById('prof-phone').value = user.phone || '';
+      }
+    }
+
+    async function handleUpdateProfile(e) {
+      e.preventDefault();
+      const token = TechFix.getToken();
+      const name = document.getElementById('prof-name').value.trim();
+      const phone = document.getElementById('prof-phone').value.trim();
+      const btn = document.getElementById('prof-btn');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name, phone })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.setAuth(data.user, token);
+          document.getElementById('acc-user-name').textContent = data.user.name;
+          TechFix.showToast('Profile updated successfully!', 'success');
+        } else {
+          TechFix.showToast(data.message, 'error');
+        }
+      } catch (err) {
+        TechFix.showToast('Failed to update profile', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Addresses
+    function toggleNewAddressForm() {
+      const card = document.getElementById('new-address-card');
+      card.style.display = card.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function loadAddresses(token) {
+      try {
+        const res = await fetch('/api/auth/addresses', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const container = document.getElementById('addresses-list-container');
+        if (!data.success || data.data.length === 0) {
+          container.innerHTML = '<div style="background: #fff; padding: 2.5rem; border-radius: 8px; border: 1px dashed var(--border); text-align: center; color: var(--text-muted);">No saved addresses yet. Add an address for rapid checkout!</div>';
+          return;
+        }
+
+        container.innerHTML = data.data.map(addr => `
+          <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="font-weight: 700; font-size: 1rem; color: var(--dark);">
+                ${addr.full_name} <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted);">(${addr.phone})</span>
+                ${addr.is_default ? '<span class="badge badge-success" style="margin-left: 0.5rem;">Default</span>' : ''}
+              </div>
+              <div style="color: var(--text-main); font-size: 0.9rem; margin-top: 0.25rem;">
+                ${addr.address_line1}${addr.address_line2 ? ', ' + addr.address_line2 : ''}, ${addr.city}, ${addr.state} - <strong>${addr.pincode}</strong>
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-sm btn-outline" onclick="deleteAddress(${addr.id})">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Load addresses error:', err);
+      }
+    }
+
+    async function handleAddAddress(e) {
+      e.preventDefault();
+      const token = TechFix.getToken();
+      const payload = {
+        fullName: document.getElementById('addr-name').value.trim(),
+        phone: document.getElementById('addr-phone').value.trim(),
+        addressLine1: document.getElementById('addr-line1').value.trim(),
+        addressLine2: document.getElementById('addr-line2').value.trim(),
+        city: document.getElementById('addr-city').value.trim(),
+        state: document.getElementById('addr-state').value.trim(),
+        pincode: document.getElementById('addr-pincode').value.trim(),
+        isDefault: true
+      };
+
+      try {
+        const res = await fetch('/api/auth/addresses', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Address saved successfully!', 'success');
+          toggleNewAddressForm();
+          loadAddresses(token);
+        } else {
+          TechFix.showToast(data.message, 'error');
+        }
+      } catch (err) {
+        TechFix.showToast('Failed to save address', 'error');
+      }
+    }
+
+    async function deleteAddress(addressId) {
+      const token = TechFix.getToken();
+      if (!confirm('Are you sure you want to remove this address?')) return;
+      try {
+        const res = await fetch(`/api/auth/addresses/${addressId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Address removed', 'success');
+          loadAddresses(token);
+        }
+      } catch (err) {
+        TechFix.showToast('Failed to delete address', 'error');
+      }
+    }
+
+    // Password Update
+    async function handleChangePassword(e) {
+      e.preventDefault();
+      const token = TechFix.getToken();
+      const currentPassword = document.getElementById('pw-current').value;
+      const newPassword = document.getElementById('pw-new').value;
+      const confirmPassword = document.getElementById('pw-confirm').value;
+
+      if (newPassword !== confirmPassword) {
+        TechFix.showToast('New passwords do not match', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('pw-btn');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/auth/change-password', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Password changed successfully!', 'success');
+          document.getElementById('pw-current').value = '';
+          document.getElementById('pw-new').value = '';
+          document.getElementById('pw-confirm').value = '';
+        } else {
+          TechFix.showToast(data.message, 'error');
+        }
+      } catch (err) {
+        TechFix.showToast('Failed to update password', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function initAccount() {
+      const user = TechFix.getUser();
+      const token = TechFix.getToken();
+
+      if (!user || !token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      document.getElementById('acc-user-name').textContent = user.name;
+      document.getElementById('acc-user-email').textContent = user.email;
+
+      // Load all tabs
+      loadOrders(token);
+      loadRepairs(token);
+      loadBuilds(token);
+      loadTickets(token);
+      loadProfile();
+      loadAddresses(token);
+    }
+
+    document.addEventListener('DOMContentLoaded', initAccount);
+  </script>
+</body>
+</html>

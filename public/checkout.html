@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — Cash On Delivery | TechFix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2.5rem;
+      margin: 2rem 0 4rem 0;
+    }
+    .checkout-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .cod-badge-box {
+      background: #f0fdf4;
+      border: 2px solid #bbf7d0;
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .cod-radio {
+      accent-color: var(--success);
+      transform: scale(1.3);
+    }
+    @media (max-width: 860px) {
+      .checkout-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-main">
+      <a href="/index.html" class="logo">
+        <span class="logo-badge">TF</span>
+        <span>TECH<span class="text-fix">FIX</span></span>
+      </a>
+      <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-muted);">
+        🔒 Secure Cash On Delivery Checkout
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="checkout-layout">
+      <!-- Checkout Form -->
+      <div>
+        <form id="checkout-form" class="checkout-card" onsubmit="handlePlaceOrder(event)">
+          <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--dark);">
+            1. Customer & Contact Details
+          </h2>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cust-name">Full Name *</label>
+              <input type="text" id="cust-name" class="form-control" placeholder="e.g. Aryan Sharma" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cust-phone">Mobile Number *</label>
+              <input type="tel" id="cust-phone" class="form-control" placeholder="e.g. 9820123456" pattern="[0-9]{10}" required>
+              <div class="form-hint">10-digit mobile number for COD delivery OTP</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cust-email">Email Address *</label>
+            <input type="email" id="cust-email" class="form-control" placeholder="e.g. aryan@example.com" required>
+            <div class="form-hint">Order invoice & tracking link will be sent here</div>
+          </div>
+
+          <h2 style="font-size: 1.35rem; font-weight: 800; margin: 2rem 0 1.25rem 0; color: var(--dark);">
+            2. Delivery Address
+          </h2>
+
+          <div class="form-group">
+            <label class="form-label" for="addr-line1">House / Flat / Building / Street Address *</label>
+            <input type="text" id="addr-line1" class="form-control" placeholder="e.g. Flat 402, Sea Green Apts, Worli Sea Face" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="addr-area">Area / Locality *</label>
+              <input type="text" id="addr-area" class="form-control" placeholder="e.g. Worli" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="addr-city">City *</label>
+              <input type="text" id="addr-city" class="form-control" value="Mumbai" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="addr-pincode">Pincode *</label>
+              <input type="text" id="addr-pincode" class="form-control" placeholder="e.g. 400050" maxlength="6" pattern="[0-9]{6}" required onblur="checkPincodeService(this.value)">
+              <div id="pincode-status" class="form-hint"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="addr-landmark">Landmark (Optional)</label>
+              <input type="text" id="addr-landmark" class="form-control" placeholder="e.g. Near HDFC Bank">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="addr-notes">Delivery Instructions (Optional)</label>
+            <input type="text" id="addr-notes" class="form-control" placeholder="e.g. Call before arrival, leave with security">
+          </div>
+
+          <h2 style="font-size: 1.35rem; font-weight: 800; margin: 2rem 0 1.25rem 0; color: var(--dark);">
+            3. Payment Method
+          </h2>
+
+          <div class="cod-badge-box">
+            <input type="radio" id="payment-cod" name="payment_method" value="COD" checked class="cod-radio">
+            <label for="payment-cod" style="cursor: pointer;">
+              <strong style="color: #166534; font-size: 1.05rem;">💵 Cash On Delivery (COD)</strong>
+              <div style="font-size: 0.85rem; color: #15803d; margin-top: 0.2rem;">
+                Pay cash directly to our delivery courier at your doorstep upon inspecting your package. No online card or UPI needed.
+              </div>
+            </label>
+          </div>
+
+          <button type="submit" id="submit-order-btn" class="btn btn-accent btn-lg btn-block" style="font-size: 1.15rem; padding: 1rem;">
+            Place COD Order Now
+          </button>
+        </form>
+      </div>
+
+      <!-- Order Review Sidebar -->
+      <div>
+        <div class="checkout-card" id="checkout-summary-box">
+          <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem; color: var(--dark);">Your Order Items</h3>
+          <div id="checkout-items-list" style="max-height: 320px; overflow-y: auto; margin-bottom: 1.25rem;">
+            <!-- Rendered via JS -->
+          </div>
+
+          <!-- Coupon Promo Code Section -->
+          <div style="margin-bottom: 1.25rem; background: #f8fafc; padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+            <label style="font-size: 0.85rem; font-weight: 700; color: var(--dark); display: block; margin-bottom: 0.4rem;">Have a Promo Coupon?</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="chk-coupon-input" placeholder="e.g. TECHFIX10" class="form-control" style="text-transform: uppercase; font-weight: 700; font-size: 0.85rem;">
+              <button type="button" class="btn btn-sm btn-primary" onclick="applyCheckoutCoupon()">Apply</button>
+            </div>
+            <div id="chk-coupon-msg" style="font-size: 0.8rem; margin-top: 0.4rem;"></div>
+          </div>
+
+          <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 0.6rem;">
+            <span>Subtotal:</span>
+            <strong id="chk-subtotal">₹0</strong>
+          </div>
+          <div id="chk-discount-row" class="summary-row" style="display: none; justify-content: space-between; margin-bottom: 0.6rem; color: var(--success); font-weight: 700;">
+            <span id="chk-discount-label">Coupon Discount:</span>
+            <span id="chk-discount">-₹0</span>
+          </div>
+          <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 0.6rem;">
+            <span>Delivery Fee:</span>
+            <strong id="chk-delivery">₹0</strong>
+          </div>
+          <div class="summary-total" style="border-top: 2px dashed var(--border); padding-top: 1rem; margin-top: 1rem; display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 800;">
+            <span>Total Payable on Delivery:</span>
+            <span id="chk-total" style="color: var(--dark);">₹0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Auth Required Modal -->
+  <div id="auth-required-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1.5rem;">
+    <div style="background: #fff; border-radius: var(--radius-lg); max-width: 460px; width: 100%; padding: 2rem; box-shadow: var(--shadow-xl); text-align: center; border: 1px solid var(--border);">
+      <div style="font-size: 3rem; margin-bottom: 0.75rem;">🔒</div>
+      <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--dark); margin-bottom: 0.5rem;">Please Sign In or Register</h3>
+      <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+        You need to sign in to place your Cash on Delivery order. Your shopping cart and entered shipping details will be safely preserved.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a href="/login.html?redirect=/checkout.html" class="btn btn-primary btn-lg" style="width: 100%;">
+          Sign In to Your Account
+        </a>
+        <a href="/register.html?redirect=/checkout.html" class="btn btn-outline btn-lg" style="width: 100%;">
+          Create New Account
+        </a>
+        <button type="button" class="btn btn-sm" style="background: none; border: none; color: var(--text-muted); cursor: pointer; margin-top: 0.5rem;" onclick="closeAuthModal()">
+          Cancel / Continue Browsing
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    let validatedDeliveryFee = 0;
+    let appliedCouponData = null;
+
+    function showAuthModal() {
+      const modal = document.getElementById('auth-required-modal');
+      modal.style.display = 'flex';
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('auth-required-modal');
+      modal.style.display = 'none';
+      const btn = document.getElementById('submit-order-btn');
+      btn.disabled = false;
+      btn.textContent = 'Place COD Order Now';
+    }
+
+    function renderCheckoutSummary() {
+      const cart = TechFix.getCart();
+      if (!cart || cart.length === 0) {
+        window.location.href = '/cart.html';
+        return;
+      }
+
+      const list = document.getElementById('checkout-items-list');
+      let subtotal = 0;
+
+      list.innerHTML = cart.map(item => {
+        const lineTotal = item.price * item.quantity;
+        subtotal += lineTotal;
+        return `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
+            <div style="padding-right: 0.5rem;">
+              <strong style="font-size: 0.9rem; color: var(--dark);">${item.name}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Qty: ${item.quantity} × ${TechFix.formatPrice(item.price)}</div>
+            </div>
+            <span style="font-weight: 700; font-size: 0.95rem;">${TechFix.formatPrice(lineTotal)}</span>
+          </div>
+        `;
+      }).join('');
+
+      validatedDeliveryFee = subtotal >= 999 ? 0 : 99;
+      let discount = 0;
+      if (appliedCouponData) {
+        discount = appliedCouponData.discount_amount;
+        document.getElementById('chk-discount-row').style.display = 'flex';
+        document.getElementById('chk-discount-label').textContent = `Coupon (${appliedCouponData.code}):`;
+        document.getElementById('chk-discount').textContent = `-₹${discount.toLocaleString('en-IN')}`;
+      } else {
+        document.getElementById('chk-discount-row').style.display = 'none';
+      }
+
+      const total = Math.max(0, subtotal - discount + validatedDeliveryFee);
+
+      document.getElementById('chk-subtotal').textContent = TechFix.formatPrice(subtotal);
+      document.getElementById('chk-delivery').innerHTML = validatedDeliveryFee === 0 ? '<span style="color: var(--success);">FREE</span>' : TechFix.formatPrice(validatedDeliveryFee);
+      document.getElementById('chk-total').textContent = TechFix.formatPrice(total);
+
+      // Pre-fill user data if logged in
+      const user = TechFix.getUser();
+      if (user) {
+        if (user.name && !document.getElementById('cust-name').value) document.getElementById('cust-name').value = user.name;
+        if (user.email && !document.getElementById('cust-email').value) document.getElementById('cust-email').value = user.email;
+        if (user.phone && !document.getElementById('cust-phone').value) document.getElementById('cust-phone').value = user.phone;
+      }
+    }
+
+    async function checkPincodeService(pincode) {
+      const statusEl = document.getElementById('pincode-status');
+      if (!pincode || pincode.length !== 6) {
+        statusEl.innerHTML = '';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/orders/service-areas/check?pincode=${pincode}`);
+        const data = await res.json();
+
+        if (data.success && data.available) {
+          statusEl.innerHTML = `<span style="color: var(--success); font-weight: 600;">✓ COD & Delivery available in ${data.area.city}</span>`;
+        } else {
+          statusEl.innerHTML = `<span style="color: var(--warning); font-weight: 600;">⚠️ Standard courier delivery applied for ${pincode}</span>`;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    async function applyCheckoutCoupon() {
+      const codeInput = document.getElementById('chk-coupon-input');
+      const msgEl = document.getElementById('chk-coupon-msg');
+      const code = codeInput.value.trim().toUpperCase();
+
+      if (!code) {
+        msgEl.innerHTML = '<span style="color: var(--danger);">Please enter a coupon code.</span>';
+        return;
+      }
+
+      const cart = TechFix.getCart();
+      const subtotal = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+
+      try {
+        const res = await fetch('/api/orders/apply-coupon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, subtotal })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          appliedCouponData = data;
+          msgEl.innerHTML = `<span style="color: var(--success); font-weight: 700;">✓ ${data.message}</span>`;
+          renderCheckoutSummary();
+        } else {
+          appliedCouponData = null;
+          msgEl.innerHTML = `<span style="color: var(--danger);">${data.message || 'Invalid coupon'}</span>`;
+          renderCheckoutSummary();
+        }
+      } catch (err) {
+        msgEl.innerHTML = '<span style="color: var(--danger);">Error validating coupon code.</span>';
+      }
+    }
+
+    async function handlePlaceOrder(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-order-btn');
+      
+      // Strict Authentication check before order placement
+      const token = TechFix.getToken();
+      const user = TechFix.getUser();
+      if (!token || !user) {
+        showAuthModal();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Processing COD Order...';
+
+      const cart = TechFix.getCart();
+      const customer_name = document.getElementById('cust-name').value;
+      const customer_phone = document.getElementById('cust-phone').value;
+      const customer_email = document.getElementById('cust-email').value;
+      const addr_line1 = document.getElementById('addr-line1').value;
+      const addr_area = document.getElementById('addr-area').value;
+      const city = document.getElementById('addr-city').value;
+      const pincode = document.getElementById('addr-pincode').value;
+      const landmark = document.getElementById('addr-landmark').value;
+      const instructions = document.getElementById('addr-notes').value;
+
+      const fullAddress = `${addr_line1}, ${addr_area}${landmark ? ', Near ' + landmark : ''}`;
+
+      const orderPayload = {
+        customer_name,
+        customer_phone,
+        customer_email,
+        shipping_address: fullAddress,
+        city,
+        pincode,
+        delivery_instructions: instructions,
+        coupon_code: appliedCouponData ? appliedCouponData.code : null,
+        items: cart.map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          custom_build_details: item.custom_build_details
+        }))
+      };
+
+      try {
+        const headers = { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        };
+
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(orderPayload)
+        });
+
+        const data = await res.json();
+
+        if (res.status === 401 || !data.success && data.message && data.message.includes('Authentication')) {
+          showAuthModal();
+          btn.disabled = false;
+          btn.textContent = 'Place COD Order Now';
+          return;
+        }
+
+        if (data.success) {
+          TechFix.clearCart();
+          sessionStorage.setItem('latest_order', JSON.stringify(data.order));
+          window.location.href = `/order-confirmation.html?orderNumber=${data.order.order_number}`;
+        } else {
+          TechFix.showToast(data.message || 'Order could not be placed.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Place COD Order Now';
+        }
+      } catch (err) {
+        console.error('Checkout error:', err);
+        TechFix.showToast('Network error while placing order.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Place COD Order Now';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCheckoutSummary);
+  </script>
+</body>
+</html>

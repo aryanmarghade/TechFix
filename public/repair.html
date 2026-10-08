@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laptop & Desktop Repair Service — Home Pickup | TechFix</title>
+  <meta name="description" content="Book professional laptop and PC repairs in Mumbai. Screen replacement, slow PC diagnosis, SSD upgrades, virus removal, and motherboard fixes with free doorstep pickup.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .repair-grid-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2.5rem;
+      margin: 2.5rem 0 4rem 0;
+    }
+    .service-card-tag {
+      background: #f0f9ff;
+      border: 1.5px solid #bae6fd;
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    @media (max-width: 860px) {
+      .repair-grid-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-bar">
+    <div class="container top-bar-content">
+      <div class="top-bar-item">
+        <span>📍 Doorstep Repair Zone:</span>
+        <span class="badge-city">Mumbai, Navi Mumbai & Thane</span>
+      </div>
+      <div class="top-bar-item">
+        <span>📞 Repair Helpline: <strong>+91 98765 43210</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-main">
+      <a href="/index.html" class="logo">
+        <span class="logo-badge">TF</span>
+        <span>TECH<span class="text-fix">FIX</span></span>
+      </a>
+
+      <div class="header-actions">
+        <a href="/account.html" id="header-account-link" class="action-btn">
+          <span>Account</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Navigation Categories -->
+    <nav class="nav-bar">
+      <div class="container">
+        <ul class="nav-list">
+          <li><a href="/index.html" class="nav-link">Home</a></li>
+          <li><a href="/shop.html" class="nav-link">Shop All</a></li>
+          <li><a href="/build-pc.html" class="nav-link highlight">⚡ Build Your PC</a></li>
+          <li><a href="/repair.html" class="nav-link active">🔧 Repair & Service</a></li>
+          <li><a href="/pickup-delivery.html" class="nav-link">🚚 Pickup & Delivery</a></li>
+          <li><a href="/help.html" class="nav-link">Help Center</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div style="margin-top: 2rem;">
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--dark);">Computer Repair & Doorstep Service</h1>
+      <p style="color: var(--text-muted); font-size: 1rem;">
+        Laptop screen replacements, slow computer optimization, SSD upgrades, liquid damage restoration, and hardware diagnostics with doorstep pickup.
+      </p>
+    </div>
+
+    <!-- Quick Tracker Bar -->
+    <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <strong style="color: var(--dark);">Already booked a service?</strong>
+        <span style="color: var(--text-muted); font-size: 0.875rem; margin-left: 0.5rem;">Track technician pickup, diagnosis & estimate approval status</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <input type="text" id="quick-track-rep" placeholder="e.g. TF-REP-2026-8001" class="form-control" style="width: 200px; padding: 0.4rem 0.75rem;">
+        <button class="btn btn-primary btn-sm" onclick="trackRepairQuick()">Track Repair</button>
+      </div>
+    </div>
+
+    <div id="repair-tracking-modal-card" style="display: none; background: #fff; border: 2px solid var(--primary); border-radius: var(--radius-lg); padding: 1.75rem; margin-top: 1.5rem;">
+      <!-- Populated dynamically -->
+    </div>
+
+    <div class="repair-grid-layout">
+      <!-- Repair Booking Form -->
+      <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+        <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--dark);">
+          Book Doorstep Repair & Diagnostics
+        </h2>
+
+        <form onsubmit="handleBookRepair(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" id="rep-name" class="form-control" placeholder="e.g. Aryan Sharma" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number *</label>
+              <input type="tel" id="rep-phone" class="form-control" placeholder="e.g. 9820123456" pattern="[0-9]{10}" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input type="email" id="rep-email" class="form-control" placeholder="e.g. aryan@example.com" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Device Type *</label>
+              <select id="rep-device" class="form-control" required>
+                <option value="Laptop">Laptop / Notebook</option>
+                <option value="Desktop PC">Desktop Tower / Workstation</option>
+                <option value="Custom PC">Custom Gaming PC</option>
+                <option value="All-in-One">All-in-One PC (AIO)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Brand & Model *</label>
+              <input type="text" id="rep-brand-model" class="form-control" placeholder="e.g. Dell Inspiron 15 3501" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Primary Issue / Service Required *</label>
+            <select id="rep-category" class="form-control" required>
+              <option value="Screen replacement">Broken Display / Screen Replacement</option>
+              <option value="Slow PC diagnosis">Slow Performance / SSD & RAM Upgrade</option>
+              <option value="Windows/software installation">OS Installation & Driver Recovery</option>
+              <option value="Keyboard replacement">Keyboard / Trackpad Not Working</option>
+              <option value="Battery replacement">Battery Draining / Power Issue</option>
+              <option value="Virus/malware cleanup">Virus / Malware Removal</option>
+              <option value="Hardware troubleshooting">No Display / Beep Errors / Crashing</option>
+              <option value="Data recovery">Hard Drive Data Recovery</option>
+              <option value="Custom PC troubleshooting">Custom PC Overheating / BSOD</option>
+              <option value="Other issue">Other Issue</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Detailed Problem Description *</label>
+            <textarea id="rep-desc" class="form-control" rows="3" placeholder="Describe symptoms, when the issue started, and any error messages..." required></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Preferred Pickup Date *</label>
+              <input type="date" id="rep-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Preferred Time Slot *</label>
+              <select id="rep-time" class="form-control" required>
+                <option value="10:00 AM - 01:00 PM">Morning (10:00 AM - 01:00 PM)</option>
+                <option value="02:00 PM - 05:00 PM">Afternoon (02:00 PM - 05:00 PM)</option>
+                <option value="05:00 PM - 08:00 PM">Evening (05:00 PM - 08:00 PM)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Pickup Address Line *</label>
+            <input type="text" id="rep-addr" class="form-control" placeholder="Building name, flat number, street" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">City *</label>
+              <input type="text" id="rep-city" class="form-control" value="Mumbai" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pincode *</label>
+              <input type="text" id="rep-pincode" class="form-control" placeholder="400050" maxlength="6" pattern="[0-9]{6}" required>
+            </div>
+          </div>
+
+          <button type="submit" id="book-rep-btn" class="btn btn-accent btn-lg btn-block" style="margin-top: 1rem;">
+            Schedule Free Doorstep Pickup
+          </button>
+        </form>
+      </div>
+
+      <!-- Service Info & Guarantees -->
+      <div>
+        <div class="service-card-tag">
+          <strong style="color: #0369a1; font-size: 1.05rem;">🛡️ TechFix Repair Promise</strong>
+          <p style="font-size: 0.875rem; color: var(--text-main); margin-top: 0.5rem; line-height: 1.5;">
+            1. <strong>Zero Hidden Charges:</strong> Free initial diagnosis & estimate prepared before any work begins.<br>
+            2. <strong>Customer Approval Required:</strong> We only start repairs after you approve the estimate.<br>
+            3. <strong>Genuine Spare Parts:</strong> 90-day warranty on replaced hardware components.<br>
+            4. <strong>Safe Data Protection:</strong> Strict privacy protocol for all storage drives.
+          </p>
+        </div>
+
+        <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-top: 1.5rem;">
+          <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">Common Repair Estimates</h3>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.875rem;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem;">
+              <span>SSD & RAM Upgrade Installation</span>
+              <strong>₹399 + part</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem;">
+              <span>OS Clean Installation & Drivers</span>
+              <strong>₹599</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem;">
+              <span>Thermal Repasting & Deep Cleaning</span>
+              <strong>₹799</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem;">
+              <span>Laptop Screen Replacement</span>
+              <strong>From ₹2,800</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Motherboard Chip-Level Repair</span>
+              <strong>From ₹1,499</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set default pickup date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('rep-date').value = tomorrow.toISOString().split('T')[0];
+
+      const user = TechFix.getUser();
+      if (user) {
+        if (user.name) document.getElementById('rep-name').value = user.name;
+        if (user.email) document.getElementById('rep-email').value = user.email;
+        if (user.phone) document.getElementById('rep-phone').value = user.phone;
+      }
+    });
+
+    async function handleBookRepair(e) {
+      e.preventDefault();
+      const btn = document.getElementById('book-rep-btn');
+      btn.disabled = true;
+      btn.textContent = 'Scheduling Pickup...';
+
+      const payload = {
+        customer_name: document.getElementById('rep-name').value,
+        customer_phone: document.getElementById('rep-phone').value,
+        customer_email: document.getElementById('rep-email').value,
+        device_type: document.getElementById('rep-device').value,
+        brand: document.getElementById('rep-brand-model').value.split(' ')[0] || 'Unknown',
+        model: document.getElementById('rep-brand-model').value,
+        problem_category: document.getElementById('rep-category').value,
+        problem_description: document.getElementById('rep-desc').value,
+        pickup_date: document.getElementById('rep-date').value,
+        pickup_time: document.getElementById('rep-time').value,
+        address_line: document.getElementById('rep-addr').value,
+        city: document.getElementById('rep-city').value,
+        pincode: document.getElementById('rep-pincode').value
+      };
+
+      try {
+        const token = TechFix.getToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/repairs', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Repair request registered successfully!', 'success');
+          alert(`🎉 Repair Scheduled! Your Request Number is: ${data.repair.request_number}\n\nOur technician will call you before arrival on ${payload.pickup_date}.`);
+          document.getElementById('quick-track-rep').value = data.repair.request_number;
+          trackRepairQuick();
+        } else {
+          TechFix.showToast(data.message, 'error');
+        }
+      } catch (err) {
+        console.error('Repair error:', err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Schedule Free Doorstep Pickup';
+      }
+    }
+
+    async function trackRepairQuick() {
+      const num = document.getElementById('quick-track-rep').value.trim();
+      if (!num) return;
+
+      const card = document.getElementById('repair-tracking-modal-card');
+      card.style.display = 'block';
+      card.innerHTML = '<div>Fetching repair progress...</div>';
+
+      try {
+        const res = await fetch(`/api/repairs/track/${encodeURIComponent(num)}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          card.innerHTML = `<div style="color: var(--danger); font-weight: 700;">${data.message || 'Repair ticket not found.'}</div>`;
+          return;
+        }
+
+        const rep = data.data;
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Request ID:</span>
+              <h3 style="color: var(--primary); font-size: 1.3rem;">${rep.request_number}</h3>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">Device: <strong>${rep.device_type} (${rep.brand} ${rep.model})</strong></div>
+            </div>
+            <div>
+              <span class="badge badge-primary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+                ${rep.status}
+              </span>
+            </div>
+          </div>
+
+          <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">
+            <strong>Diagnosis Summary:</strong><br>
+            ${rep.diagnosis || 'Technician inspection currently scheduled.'}<br><br>
+            ${rep.estimate_amount ? `
+              <div style="font-size: 1.05rem; font-weight: 800; color: var(--dark);">
+                Repair Estimate: ${TechFix.formatPrice(rep.estimate_amount)}
+              </div>
+              <div style="margin-top: 0.5rem;">
+                ${rep.customer_approved === true ? '<span class="badge badge-success">✓ Approved by Customer</span>' :
+                  rep.customer_approved === false ? '<span class="badge badge-danger">Declined by Customer</span>' : `
+                  <button class="btn btn-sm btn-accent" onclick="approveEstimate(${rep.id}, true)">Approve Estimate (₹${rep.estimate_amount})</button>
+                  <button class="btn btn-sm btn-outline" onclick="approveEstimate(${rep.id}, false)">Decline</button>
+                `}
+              </div>
+            ` : '<span style="color: var(--text-muted);">Estimate will be prepared after physical inspection.</span>'}
+          </div>
+        `;
+      } catch (err) {
+        console.error('Track repair error:', err);
+      }
+    }
+
+    async function approveEstimate(repairId, approved) {
+      const token = TechFix.getToken();
+      if (!token) {
+        TechFix.showToast('Please log in to approve estimates.', 'warning');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/repairs/${repairId}/approve-estimate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ approved })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast(data.message, 'success');
+          trackRepairQuick();
+        } else {
+          TechFix.showToast(data.message, 'error');
+        }
+      } catch (e) {
+        console.error('Approve estimate error:', e);
+      }
+    }
+  </script>
+</body>
+</html>

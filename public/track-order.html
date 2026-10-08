@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order & COD Delivery Status — TechFix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .timeline {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 2.5rem 0;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      right: 20px;
+      height: 4px;
+      background: var(--border);
+      z-index: 1;
+    }
+    .timeline-step {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      flex: 1;
+    }
+    .timeline-dot {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid var(--border);
+      color: var(--text-muted);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.6rem auto;
+      font-size: 0.85rem;
+    }
+    .timeline-step.completed .timeline-dot {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+    .timeline-step.active .timeline-dot {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+    .timeline-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .timeline-step.completed .timeline-label,
+    .timeline-step.active .timeline-label {
+      color: var(--dark);
+    }
+    @media (max-width: 640px) {
+      .timeline {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: flex-start;
+      }
+      .timeline::before {
+        display: none;
+      }
+      .timeline-step {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-align: left;
+      }
+      .timeline-dot {
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-main">
+      <a href="/index.html" class="logo">
+        <span class="logo-badge">TF</span>
+        <span>TECH<span class="text-fix">FIX</span></span>
+      </a>
+
+      <div class="header-actions">
+        <a href="/account.html" id="header-account-link" class="action-btn">
+          <span>Account</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="max-width: 800px; margin: 3rem auto 5rem auto;">
+    <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; text-align: center;">
+      Track Order Status
+    </h1>
+    <p style="color: var(--text-muted); text-align: center; margin-bottom: 2rem;">
+      Enter your TechFix order reference number to check packaging, dispatch, and doorstep Cash on Delivery status.
+    </p>
+
+    <!-- Search Box -->
+    <div style="background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm); margin-bottom: 2rem;">
+      <form onsubmit="handleTrack(event)" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <input type="text" id="track-ord-input" placeholder="e.g. TF-ORD-2026-1001" class="form-control" style="flex: 1; min-width: 240px; font-weight: 600;" required>
+        <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.5rem;">Track Order</button>
+      </form>
+    </div>
+
+    <!-- Result Display Container -->
+    <div id="order-result-card" style="display: none; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+      <!-- Rendered dynamically -->
+    </div>
+  </main>
+
+  <script src="/js/app.js"></script>
+  <script>
+    const ORDER_STAGES = ['Order Placed', 'Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Completed'];
+
+    async function handleTrack(e) {
+      if (e) e.preventDefault();
+      const num = document.getElementById('track-ord-input').value.trim();
+      if (!num) return;
+
+      const resultBox = document.getElementById('order-result-card');
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '<div style="text-align:center; padding: 2rem;">Fetching order status...</div>';
+
+      try {
+        const res = await fetch(`/api/orders/track/${encodeURIComponent(num)}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          resultBox.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--danger);">
+              <h3>Order Not Found</h3>
+              <p style="margin-top: 0.5rem; color: var(--text-muted);">${data.message || 'Please verify your order number and try again.'}</p>
+            </div>
+          `;
+          return;
+        }
+
+        const ord = data.data;
+        const currentStageIndex = ORDER_STAGES.indexOf(ord.order_status);
+
+        resultBox.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+              <span style="font-size: 0.85rem; color: var(--text-muted);">Order Number:</span>
+              <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--primary);">${ord.order_number}</h2>
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">Placed on: ${new Date(ord.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            </div>
+            <div style="text-align: right;">
+              <span class="badge ${ord.order_status === 'Delivered' ? 'badge-success' : 'badge-primary'}" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+                ${ord.order_status}
+              </span>
+              <div style="font-size: 0.85rem; color: #166534; font-weight: 700; margin-top: 0.35rem;">💵 Payment: ${ord.payment_method} (${ord.payment_status})</div>
+            </div>
+          </div>
+
+          <!-- Stage Timeline -->
+          <div class="timeline">
+            ${ORDER_STAGES.map((stg, idx) => {
+              let cls = '';
+              if (idx < currentStageIndex) cls = 'completed';
+              else if (idx === currentStageIndex) cls = 'active';
+
+              return `
+                <div class="timeline-step ${cls}">
+                  <div class="timeline-dot">${idx < currentStageIndex ? '✓' : idx + 1}</div>
+                  <div class="timeline-label">${stg}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Delivery Address & Summary -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; background: #f8fafc; padding: 1.25rem; border-radius: var(--radius-md); margin-top: 2rem;">
+            <div>
+              <strong style="font-size: 0.9rem; color: var(--dark);">📍 Shipping Address</strong>
+              <p style="font-size: 0.875rem; color: var(--text-main); margin-top: 0.35rem; line-height: 1.5;">
+                <strong>${ord.customer_name}</strong><br>
+                ${ord.shipping_address}<br>
+                ${ord.city} - ${ord.pincode}<br>
+                📞 Phone: ${ord.customer_phone}
+              </p>
+            </div>
+            <div>
+              <strong style="font-size: 0.9rem; color: var(--dark);">💰 Payment Breakdown</strong>
+              <div style="font-size: 0.875rem; margin-top: 0.35rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 0.2rem;"><span>Subtotal:</span><strong>${TechFix.formatPrice(ord.subtotal)}</strong></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom: 0.2rem;"><span>Delivery:</span><strong>${ord.delivery_fee == 0 ? 'FREE' : TechFix.formatPrice(ord.delivery_fee)}</strong></div>
+                <div style="display:flex; justify-content:space-between; border-top: 1px solid var(--border); padding-top: 0.4rem; font-size: 1rem;"><span>Total Payable:</span><strong>${TechFix.formatPrice(ord.total)}</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Ordered -->
+          <div style="margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <strong style="font-size: 0.95rem; color: var(--dark);">Items in this order:</strong>
+              <a href="/api/orders/${ord.order_number}/invoice" target="_blank" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                📄 Download Tax Invoice
+              </a>
+            </div>
+            <div style="margin-top: 0.75rem;">
+              ${ord.items && ord.items.map(item => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--border);">
+                  <div>
+                    <strong style="font-size: 0.9rem;">${item.product_name_snapshot}</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Qty: ${item.quantity} × ${TechFix.formatPrice(item.unit_price)}</div>
+                  </div>
+                  <strong style="font-size: 0.95rem;">${TechFix.formatPrice(item.line_total)}</strong>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        console.error('Track error:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ordNum = urlParams.get('orderNumber');
+      if (ordNum) {
+        document.getElementById('track-ord-input').value = ordNum;
+        handleTrack();
+      }
+    });
+  </script>
+</body>
+</html>

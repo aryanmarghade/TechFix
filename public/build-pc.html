@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom PC Builder — Build Your Own PC | TechFix</title>
+  <meta name="description" content="Configure your custom desktop PC component by component with real-time socket, RAM generation, PSU wattage, and chassis clearance compatibility validation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .builder-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 2.5rem;
+      margin: 2rem 0 4rem 0;
+    }
+    .component-slot-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+      transition: var(--transition);
+    }
+    .component-slot-card.has-part {
+      border-color: #38bdf8;
+      background: #f0f9ff;
+    }
+    .slot-info {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex: 1;
+    }
+    .slot-icon {
+      width: 48px;
+      height: 48px;
+      background: #f1f5f9;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .sticky-builder-summary {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 90px;
+      height: fit-content;
+    }
+    .compat-alert-box {
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .compat-alert-box.compat-error {
+      background: #fee2e2;
+      border: 1.5px solid #f87171;
+      color: #991b1b;
+    }
+    .compat-alert-box.compat-warning {
+      background: #fef3c7;
+      border: 1.5px solid #fbbf24;
+      color: #92400e;
+    }
+    .compat-alert-box.compat-ok {
+      background: #dcfce7;
+      border: 1.5px solid #4ade80;
+      color: #166534;
+    }
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-dialog {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 780px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    @media (max-width: 960px) {
+      .builder-layout {
+        grid-template-columns: 1fr;
+      }
+      .sticky-builder-summary {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-bar">
+    <div class="container top-bar-content">
+      <div class="top-bar-item">
+        <span>📍 Service City:</span>
+        <span class="badge-city">Mumbai, Maharashtra</span>
+      </div>
+      <div class="top-bar-item">
+        <span>⚡ Custom PC Assembly, Stress-Testing & Doorstep Delivery</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-main">
+      <a href="/index.html" class="logo">
+        <span class="logo-badge">TF</span>
+        <span>TECH<span class="text-fix">FIX</span></span>
+      </a>
+
+      <div class="header-actions">
+        <a href="/login.html" id="header-account-link" class="action-btn">
+          <span>Account</span>
+        </a>
+        <a href="/cart.html" class="action-btn">
+          <div class="cart-icon-wrapper">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            <span class="cart-count" id="cart-badge-count" style="display:none;">0</span>
+          </div>
+          <span>Cart</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Navigation Categories -->
+    <nav class="nav-bar">
+      <div class="container">
+        <ul class="nav-list">
+          <li><a href="/index.html" class="nav-link">Home</a></li>
+          <li><a href="/shop.html" class="nav-link">Shop All</a></li>
+          <li><a href="/laptops.html" class="nav-link">Laptops</a></li>
+          <li><a href="/pcs.html" class="nav-link">Pre-Built PCs</a></li>
+          <li><a href="/internal-ssds.html" class="nav-link">Internal SSDs</a></li>
+          <li><a href="/build-pc.html" class="nav-link active highlight">⚡ Build Your PC</a></li>
+          <li><a href="/repair.html" class="nav-link">🔧 Repair & Service</a></li>
+          <li><a href="/pickup-delivery.html" class="nav-link">🚚 Pickup & Delivery</a></li>
+          <li><a href="/help.html" class="nav-link">Help Center</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div style="margin-top: 2rem;">
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--dark);">Build Your Own PC</h1>
+      <p style="color: var(--text-muted); font-size: 1rem; margin-top: 0.25rem;">
+        Choose every component. TechFix will assemble, optimize BIOS/XMP, stress-test for 24 hours, and deliver to your home.
+      </p>
+    </div>
+
+    <!-- 1-Click Curated Presets (Gaming & Non-Gaming) -->
+    <div style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-top: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <strong style="color: var(--dark); font-size: 1.05rem;">⚡ 1-Click Quick Build Templates</strong>
+          <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem;">Choose a verified configuration or build from scratch</span>
+        </div>
+        <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700;">100% Tested & Compatible</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+        <!-- Non-Gaming Budget Office -->
+        <button type="button" class="btn btn-outline" style="text-align: left; padding: 0.75rem 1rem; height: auto; display: flex; flex-direction: column; gap: 0.2rem; border-color: #cbd5e1;" onclick="applyBuildPreset('office')">
+          <div style="font-weight: 800; color: #0f172a; font-size: 0.9rem;">🏢 Budget Office & Study</div>
+          <div style="font-size: 0.75rem; color: #64748b;">Pentium Gold • 8GB RAM • 240GB SSD</div>
+          <div style="font-weight: 700; color: var(--primary); font-size: 0.85rem; margin-top: 0.2rem;">~₹18,500</div>
+        </button>
+
+        <!-- Non-Gaming Workstation / Dev -->
+        <button type="button" class="btn btn-outline" style="text-align: left; padding: 0.75rem 1rem; height: auto; display: flex; flex-direction: column; gap: 0.2rem; border-color: #cbd5e1;" onclick="applyBuildPreset('workstation')">
+          <div style="font-weight: 800; color: #0f172a; font-size: 0.9rem;">💼 Pro Workstation & Dev</div>
+          <div style="font-size: 0.75rem; color: #64748b;">Core i7 • 32GB DDR5 • 1TB NVMe • Dual Mon</div>
+          <div style="font-weight: 700; color: var(--primary); font-size: 0.85rem; margin-top: 0.2rem;">~₹78,000</div>
+        </button>
+
+        <!-- Gaming Esports 1080p -->
+        <button type="button" class="btn btn-outline" style="text-align: left; padding: 0.75rem 1rem; height: auto; display: flex; flex-direction: column; gap: 0.2rem; border-color: #cbd5e1;" onclick="applyBuildPreset('esports')">
+          <div style="font-weight: 800; color: #0f172a; font-size: 0.9rem;">🎮 1080p Esports Gaming</div>
+          <div style="font-size: 0.75rem; color: #64748b;">Ryzen 5 5600 • GTX 1650 • 16GB DDR4</div>
+          <div style="font-weight: 700; color: var(--primary); font-size: 0.85rem; margin-top: 0.2rem;">~₹45,000</div>
+        </button>
+
+        <!-- Ultimate 4K Extreme Gaming -->
+        <button type="button" class="btn btn-outline" style="text-align: left; padding: 0.75rem 1rem; height: auto; display: flex; flex-direction: column; gap: 0.2rem; border-color: #cbd5e1;" onclick="applyBuildPreset('ultimate_gaming')">
+          <div style="font-weight: 800; color: #0f172a; font-size: 0.9rem;">🚀 4K Ultra RTX 4080 Rig</div>
+          <div style="font-size: 0.75rem; color: #64748b;">Ryzen 7 7800X3D • RTX 4080S • 32GB DDR5</div>
+          <div style="font-weight: 700; color: var(--primary); font-size: 0.85rem; margin-top: 0.2rem;">~₹2,20,000</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="builder-layout">
+      <!-- Left: Component Selection Slots -->
+      <div>
+        <div id="slots-container">
+          <!-- Slots rendered via JS: CPU, Motherboard, RAM, GPU, Storage, PSU, Cooler, Cabinet, OS -->
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button class="btn btn-outline" onclick="resetBuilder()">Reset Build</button>
+          <button class="btn btn-outline" onclick="saveBuildToAccount()">Save Build to Account</button>
+        </div>
+      </div>
+
+      <!-- Right: Live Compatibility & Build Summary -->
+      <div>
+        <div class="sticky-builder-summary">
+          <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--dark);">
+            Build Status & Compatibility
+          </h3>
+
+          <!-- Real-time Compatibility Notification Box -->
+          <div id="compat-status-box" class="compat-alert-box compat-ok">
+            ✓ Select components on the left to begin compatibility verification.
+          </div>
+
+          <!-- Power Metrics -->
+          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span>Estimated System Power:</span>
+              <strong id="est-wattage">~50 W</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Recommended PSU:</span>
+              <strong id="rec-psu">~450 W+</strong>
+            </div>
+          </div>
+
+          <!-- Selected Component Cost Summary -->
+          <div id="summary-parts-list" style="max-height: 220px; overflow-y: auto; font-size: 0.85rem; margin-bottom: 1rem;">
+            <!-- Rendered parts list -->
+          </div>
+
+          <div style="border-top: 1px solid var(--border); padding-top: 0.75rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; font-size: 0.9rem;">
+            <span>Components Subtotal:</span>
+            <strong id="build-subtotal">₹0</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 1rem;">
+            <span>Assembly & Stress Testing:</span>
+            <strong id="build-assembly">₹999</strong>
+          </div>
+
+          <div style="border-top: 2px dashed var(--border); padding-top: 1rem; display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 800; color: var(--dark);">
+            <span>Total Build Price:</span>
+            <span id="build-grand-total">₹999</span>
+          </div>
+
+          <button id="add-build-cart-btn" class="btn btn-accent btn-lg btn-block" style="margin-top: 1.5rem;" onclick="addBuildToCart()">
+            Add Custom PC to Cart (COD)
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Component Selection Modal -->
+  <div class="modal-backdrop" id="parts-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-slot-title" style="font-size: 1.2rem; font-weight: 800;">Select Component</h3>
+        <button onclick="closePartsModal()" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-parts-list">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    const SLOTS = [
+      { key: 'cpu', name: 'Processor / CPU', icon: '🧠' },
+      { key: 'motherboard', name: 'Motherboard', icon: '🔌' },
+      { key: 'ram', name: 'Memory / RAM', icon: '⚡' },
+      { key: 'gpu', name: 'Graphics Card / GPU', icon: '🎮' },
+      { key: 'ssd', name: 'Storage / SSD (Primary M.2)', icon: '💾' },
+      { key: 'hdd', name: 'Secondary Storage / HDD', icon: '💽' },
+      { key: 'psu', name: 'Power Supply / PSU', icon: '🔋' },
+      { key: 'cooler', name: 'CPU Cooler (Air / AIO Liquid)', icon: '❄️' },
+      { key: 'cabinet', name: 'Chassis / Cabinet', icon: '🖥️' },
+      { key: 'fans', name: 'Case Cooling Fans', icon: '🌀' },
+      { key: 'os', name: 'Operating System', icon: '💿' },
+      { key: 'monitor', name: 'Gaming / Office Monitor', icon: '🖥️' },
+      { key: 'keyboard', name: 'Mechanical / Office Keyboard', icon: '⌨️' },
+      { key: 'mouse', name: 'Gaming / Precision Mouse', icon: '🖱️' }
+    ];
+
+    let currentBuild = {
+      cpu: null,
+      motherboard: null,
+      ram: null,
+      gpu: null,
+      ssd: null,
+      hdd: null,
+      psu: null,
+      cooler: null,
+      cabinet: null,
+      fans: null,
+      os: null,
+      monitor: null,
+      keyboard: null,
+      mouse: null
+    };
+
+    let activeModalSlot = null;
+
+    function renderSlots() {
+      const container = document.getElementById('slots-container');
+      container.innerHTML = SLOTS.map(slot => {
+        const selected = currentBuild[slot.key];
+        return `
+          <div class="component-slot-card ${selected ? 'has-part' : ''}">
+            <div class="slot-info">
+              <div class="slot-icon">${slot.icon}</div>
+              <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">${slot.name}</div>
+                ${selected ? `
+                  <strong style="color: var(--dark); font-size: 1rem;">${selected.name}</strong>
+                  <div style="font-size: 0.85rem; color: var(--primary); font-weight: 700; margin-top: 0.2rem;">${TechFix.formatPrice(selected.price)}</div>
+                ` : `
+                  <div style="color: var(--text-light); font-size: 0.9rem; font-style: italic;">No component selected</div>
+                `}
+              </div>
+            </div>
+
+            <div>
+              ${selected ? `
+                <button class="btn btn-sm btn-outline" onclick="openPartsModal('${slot.key}')">Change</button>
+                <button class="btn btn-sm btn-outline" style="color: var(--danger); margin-left: 0.4rem;" onclick="removePart('${slot.key}')">&times;</button>
+              ` : `
+                <button class="btn btn-sm btn-primary" onclick="openPartsModal('${slot.key}')">+ Select</button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      validateAndSummarizeBuild();
+    }
+
+    let cachedSlotParts = [];
+
+    async function openPartsModal(slotKey) {
+      activeModalSlot = slotKey;
+      const slotDef = SLOTS.find(s => s.key === slotKey);
+      document.getElementById('modal-slot-title').textContent = `Select ${slotDef.name}`;
+      const listEl = document.getElementById('modal-parts-list');
+      listEl.innerHTML = '<div style="text-align: center; padding: 2rem;">Loading available components...</div>';
+      document.getElementById('parts-modal').style.display = 'flex';
+
+      try {
+        const res = await fetch(`/api/builder/components?type=${slotKey}`);
+        const data = await res.json();
+
+        if (!data.success || data.data.length === 0) {
+          listEl.innerHTML = '<div style="text-align: center; padding: 2rem;">No matching parts currently in stock.</div>';
+          return;
+        }
+
+        cachedSlotParts = data.data;
+        renderModalPartsList(cachedSlotParts, slotKey);
+      } catch (err) {
+        console.error('Parts load error:', err);
+      }
+    }
+
+    function renderModalPartsList(parts, slotKey) {
+      const listEl = document.getElementById('modal-parts-list');
+      listEl.innerHTML = `
+        <div style="margin-bottom: 0.75rem;">
+          <input type="text" id="part-filter-input" placeholder="🔍 Search components by brand, model or specs..." 
+                 oninput="filterModalParts(this.value, '${slotKey}')"
+                 style="width: 100%; padding: 0.65rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.9rem;">
+        </div>
+        <div id="modal-items-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          ${renderModalItemsHTML(parts, slotKey)}
+        </div>
+      `;
+    }
+
+    function renderModalItemsHTML(parts, slotKey) {
+      if (!parts || parts.length === 0) {
+        return '<div style="text-align: center; padding: 1.5rem; color: var(--text-muted);">No components matched your search.</div>';
+      }
+      return parts.map(part => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: #fff; transition: var(--transition);">
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <img src="${part.image_url}" style="width: 60px; height: 50px; object-fit: cover; border-radius: 4px;" alt="${part.name}">
+            <div>
+              <strong style="font-size: 0.95rem; color: var(--dark);">${part.name}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">${part.short_description || ''}</div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-top: 0.2rem;">${TechFix.formatPrice(part.price)}</div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="selectPart('${slotKey}', ${JSON.stringify(part).replace(/"/g, '&quot;')})">
+            Choose Part
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function filterModalParts(term, slotKey) {
+      const q = (term || '').toLowerCase().trim();
+      const filtered = cachedSlotParts.filter(p => 
+        p.name.toLowerCase().includes(q) || 
+        (p.short_description && p.short_description.toLowerCase().includes(q)) ||
+        (p.brand && p.brand.toLowerCase().includes(q))
+      );
+      document.getElementById('modal-items-container').innerHTML = renderModalItemsHTML(filtered, slotKey);
+    }
+
+    function closePartsModal() {
+      document.getElementById('parts-modal').style.display = 'none';
+      activeModalSlot = null;
+      cachedSlotParts = [];
+    }
+
+    function selectPart(slotKey, partObj) {
+      currentBuild[slotKey] = partObj;
+      closePartsModal();
+      renderSlots();
+    }
+
+    function removePart(slotKey) {
+      currentBuild[slotKey] = null;
+      renderSlots();
+    }
+
+    function resetBuilder() {
+      if (confirm('Reset current PC configuration?')) {
+        Object.keys(currentBuild).forEach(k => currentBuild[k] = null);
+        renderSlots();
+      }
+    }
+
+    async function applyBuildPreset(presetType) {
+      TechFix.showToast(`Loading ${presetType.toUpperCase()} preset...`, 'info');
+      try {
+        const res = await fetch('/api/builder/components');
+        const data = await res.json();
+        if (!data.success || !data.data) return;
+
+        const all = data.data;
+        const findBySlug = (slug) => all.find(p => p.slug === slug);
+        const findByTypeAndKeyword = (type, kw) => all.find(p => p.component_type === type && p.name.toLowerCase().includes(kw.toLowerCase()));
+
+        // Reset
+        Object.keys(currentBuild).forEach(k => currentBuild[k] = null);
+
+        if (presetType === 'office') {
+          // Budget Office & Study (~₹18k-₹20k)
+          currentBuild.cpu = findBySlug('intel-pentium-gold-g7400-cpu') || findByTypeAndKeyword('cpu', 'pentium') || findByTypeAndKeyword('cpu', '12100');
+          currentBuild.motherboard = findBySlug('asus-prime-h610m-e-d4-motherboard') || findByTypeAndKeyword('motherboard', 'h610');
+          currentBuild.ram = findBySlug('crucial-8gb-ddr4-3200mhz-ram') || findByTypeAndKeyword('ram', '8gb');
+          currentBuild.ssd = findBySlug('kingston-a400-240gb-sata-ssd') || findByTypeAndKeyword('ssd', '240gb');
+          currentBuild.psu = findBySlug('ant-esports-vs450l-450w-psu') || findByTypeAndKeyword('psu', '450');
+          currentBuild.cooler = findBySlug('intel-laminar-stealth-stock-cooler') || findByTypeAndKeyword('cooler', 'stealth') || findByTypeAndKeyword('cooler', 'ag400');
+          currentBuild.cabinet = findBySlug('frontech-supreme-matx-office-cabinet') || findByTypeAndKeyword('cabinet', 'frontech') || findByTypeAndKeyword('cabinet', 'deepcool');
+          currentBuild.os = findBySlug('ubuntu-2404-lts-free-install') || findByTypeAndKeyword('os', 'ubuntu');
+          currentBuild.keyboard = findBySlug('logitech-k120-usb-office-keyboard') || findByTypeAndKeyword('keyboard', 'k120');
+          currentBuild.mouse = findBySlug('hp-150-wireless-optical-mouse') || findByTypeAndKeyword('mouse', 'hp 150');
+          currentBuild.monitor = findBySlug('samsung-24-essential-fhd-75hz-monitor') || findByTypeAndKeyword('monitor', 'samsung 24');
+        } else if (presetType === 'workstation') {
+          // Professional Workstation & Developer (~₹78k)
+          currentBuild.cpu = findBySlug('intel-core-i7-13700-cpu') || findByTypeAndKeyword('cpu', '13700');
+          currentBuild.motherboard = findBySlug('asus-tuf-gaming-b760-plus-wifi-ddr5') || findByTypeAndKeyword('motherboard', 'b760');
+          currentBuild.ram = findBySlug('corsair-vengeance-16gb-ddr5-5200') || findByTypeAndKeyword('ram', 'ddr5');
+          currentBuild.gpu = findBySlug('asus-geforce-gt-710-2gb-silent') || findByTypeAndKeyword('gpu', 'gt 710');
+          currentBuild.ssd = findBySlug('crucial-p3-plus-1tb-pcie4-nvme') || findByTypeAndKeyword('ssd', '1tb');
+          currentBuild.psu = findBySlug('corsair-cv550-550w-psu') || findByTypeAndKeyword('psu', '550');
+          currentBuild.cooler = findBySlug('deepcool-ag400-argb-cpu-cooler') || findByTypeAndKeyword('cooler', 'ag400');
+          currentBuild.cabinet = findBySlug('corsair-4000d-airflow-tempered-glass') || findByTypeAndKeyword('cabinet', '4000d');
+          currentBuild.os = findBySlug('ubuntu-2404-lts-free-install') || findByTypeAndKeyword('os', 'windows 11 pro');
+          currentBuild.keyboard = findBySlug('logitech-k380-bluetooth-keyboard') || findByTypeAndKeyword('keyboard', 'k380');
+          currentBuild.mouse = findBySlug('logitech-m221-silent-wireless-mouse') || findByTypeAndKeyword('mouse', 'm221');
+          currentBuild.monitor = findBySlug('acer-nitro-vg271u-27-2k-180hz-monitor') || findByTypeAndKeyword('monitor', '27');
+        } else if (presetType === 'esports') {
+          // 1080p Esports Gaming (~₹45k-₹50k)
+          currentBuild.cpu = findBySlug('amd-ryzen-5-5600-cpu') || findByTypeAndKeyword('cpu', '5600');
+          currentBuild.motherboard = findBySlug('msi-b450m-pro-vdh-max-am4') || findByTypeAndKeyword('motherboard', 'b450');
+          currentBuild.ram = findBySlug('corsair-vengeance-lpx-16gb-ddr4-3200') || findByTypeAndKeyword('ram', '16gb');
+          currentBuild.gpu = findBySlug('zotac-gtx-1650-4gb-gddr6-gpu') || findByTypeAndKeyword('gpu', '1650');
+          currentBuild.ssd = findBySlug('wd-black-sn770-1tb-gen4-nvme') || findByTypeAndKeyword('ssd', 'sn770');
+          currentBuild.psu = findBySlug('corsair-cv550-550w-psu') || findByTypeAndKeyword('psu', '550');
+          currentBuild.cooler = findBySlug('deepcool-ag400-argb-cpu-cooler') || findByTypeAndKeyword('cooler', 'ag400');
+          currentBuild.cabinet = findBySlug('montech-air-100-argb-matx') || findByTypeAndKeyword('cabinet', 'air 100');
+          currentBuild.fans = findBySlug('cooler-master-sickleflow-120-argb') || findByTypeAndKeyword('fans', 'sickleflow');
+          currentBuild.os = findBySlug('windows-11-home-digital-license') || findByTypeAndKeyword('os', 'windows 11 home');
+          currentBuild.keyboard = findBySlug('redragon-k552-kumara-mechanical-keyboard') || findByTypeAndKeyword('keyboard', 'redragon');
+          currentBuild.mouse = findBySlug('razer-deathadder-essential-gaming-mouse') || findByTypeAndKeyword('mouse', 'deathadder');
+          currentBuild.monitor = findBySlug('lg-ultragear-24-180hz-fast-ips-monitor') || findByTypeAndKeyword('monitor', 'ultragear');
+        } else if (presetType === 'ultimate_gaming') {
+          // 4K Ultra RTX 4080 Rig (~₹2.2L)
+          currentBuild.cpu = findBySlug('amd-ryzen-7-7800x3d-cpu') || findByTypeAndKeyword('cpu', '7800x3d');
+          currentBuild.motherboard = findBySlug('gigabyte-b650-aorus-elite-ax-am5') || findByTypeAndKeyword('motherboard', 'b650');
+          currentBuild.ram = findBySlug('gskill-flare-x5-32gb-ddr5-6000-expo') || findByTypeAndKeyword('ram', '6000mhz');
+          currentBuild.gpu = findBySlug('msi-rtx-4080-super-16gb-gaming-slim') || findByTypeAndKeyword('gpu', '4080');
+          currentBuild.ssd = findBySlug('samsung-990-pro-2tb-heatsink-nvme') || findByTypeAndKeyword('ssd', '990 pro');
+          currentBuild.psu = findBySlug('corsair-rm1000x-1000w-gold-modular') || findByTypeAndKeyword('psu', '1000');
+          currentBuild.cooler = findBySlug('deepcool-lt720-360mm-liquid-cooler') || findByTypeAndKeyword('cooler', 'lt720');
+          currentBuild.cabinet = findBySlug('lian-li-o11-dynamic-evo-case') || findByTypeAndKeyword('cabinet', 'lian li');
+          currentBuild.fans = findBySlug('corsair-icue-af120-rgb-elite-triple') || findByTypeAndKeyword('fans', 'corsair');
+          currentBuild.os = findBySlug('windows-11-pro-digital-license') || findByTypeAndKeyword('os', 'windows 11 pro');
+          currentBuild.keyboard = findBySlug('redragon-k552-kumara-mechanical-keyboard') || findByTypeAndKeyword('keyboard', 'redragon');
+          currentBuild.mouse = findBySlug('logitech-g102-lightsync-rgb-mouse') || findByTypeAndKeyword('mouse', 'g102');
+          currentBuild.monitor = findBySlug('acer-nitro-vg271u-27-2k-180hz-monitor') || findByTypeAndKeyword('monitor', 'acer nitro');
+        }
+
+        renderSlots();
+        TechFix.showToast(`Applied ${presetType.toUpperCase()} preset successfully!`, 'success');
+      } catch (err) {
+        console.error('Apply preset error:', err);
+      }
+    }
+
+    async function validateAndSummarizeBuild() {
+      let subtotal = 0;
+      const partsSummary = [];
+
+      Object.keys(currentBuild).forEach(k => {
+        if (currentBuild[k]) {
+          subtotal += parseFloat(currentBuild[k].price);
+          partsSummary.push(`
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">${currentBuild[k].name}</span>
+              <strong>${TechFix.formatPrice(currentBuild[k].price)}</strong>
+            </div>
+          `);
+        }
+      });
+
+      const assemblyFee = partsSummary.length > 0 ? 999 : 0;
+      const grandTotal = subtotal + assemblyFee;
+
+      document.getElementById('summary-parts-list').innerHTML = partsSummary.join('') || '<div style="color: var(--text-muted); text-align: center;">No parts added yet.</div>';
+      document.getElementById('build-subtotal').textContent = TechFix.formatPrice(subtotal);
+      document.getElementById('build-assembly').textContent = TechFix.formatPrice(assemblyFee);
+      document.getElementById('build-grand-total').textContent = TechFix.formatPrice(grandTotal);
+
+      // Call Server-side Compatibility Engine
+      try {
+        const res = await fetch('/api/builder/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ parts: currentBuild })
+        });
+        const valData = await res.json();
+
+        const statusBox = document.getElementById('compat-status-box');
+        const cartBtn = document.getElementById('add-build-cart-btn');
+
+        document.getElementById('est-wattage').textContent = `~${valData.estimatedWattage || 50} W`;
+        document.getElementById('rec-psu').textContent = `~${valData.recommendedPsuWattage || 450} W+`;
+
+        if (valData.errors && valData.errors.length > 0) {
+          statusBox.className = 'compat-alert-box compat-error';
+          statusBox.innerHTML = `<strong>⛔ Compatibility Conflict:</strong><br>${valData.errors.map(e => `• ${e.message}`).join('<br>')}`;
+          cartBtn.disabled = true;
+        } else if (valData.warnings && valData.warnings.length > 0) {
+          statusBox.className = 'compat-alert-box compat-warning';
+          statusBox.innerHTML = `<strong>⚠️ System Notice:</strong><br>${valData.warnings.map(w => `• ${w.message}`).join('<br>')}`;
+          cartBtn.disabled = partsSummary.length < 3; // require core parts
+        } else if (partsSummary.length >= 3) {
+          statusBox.className = 'compat-alert-box compat-ok';
+          statusBox.innerHTML = `<strong>✓ 100% Compatible!</strong> All selected parts fit and match voltage, socket, and generation standards.`;
+          cartBtn.disabled = false;
+        } else {
+          statusBox.className = 'compat-alert-box compat-ok';
+          statusBox.innerHTML = `Select core parts (CPU, Motherboard, RAM, PSU, Cabinet) to verify compatibility.`;
+          cartBtn.disabled = true;
+        }
+      } catch (err) {
+        console.error('Validation error:', err);
+      }
+    }
+
+    function addBuildToCart() {
+      if (!currentBuild.cpu || !currentBuild.motherboard || !currentBuild.ram) {
+        TechFix.showToast('Please select at least CPU, Motherboard, and RAM before adding build to cart.', 'error');
+        return;
+      }
+
+      let subtotal = 0;
+      Object.keys(currentBuild).forEach(k => {
+        if (currentBuild[k]) subtotal += parseFloat(currentBuild[k].price);
+      });
+      const totalPrice = subtotal + 999;
+
+      const customBuildDetails = {
+        name: `Custom PC Build (${currentBuild.cpu.name.split(' ')[0]} + ${currentBuild.gpu ? currentBuild.gpu.name.split(' ')[0] : 'iGPU'})`,
+        total_price: totalPrice,
+        components: currentBuild
+      };
+
+      TechFix.addToCart({
+        id: 99999, // Custom build product ID
+        name: customBuildDetails.name,
+        price: totalPrice,
+        brand: 'TechFix Custom Rig',
+        image_url: 'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=600&auto=format&fit=crop&q=80',
+        stock_quantity: 10
+      }, 1, customBuildDetails);
+
+      window.location.href = '/cart.html';
+    }
+
+    async function saveBuildToAccount() {
+      const user = TechFix.getUser();
+      if (!user) {
+        TechFix.showToast('Please log in to save custom builds to your profile.', 'warning');
+        setTimeout(() => window.location.href = '/login.html', 1500);
+        return;
+      }
+
+      let subtotal = 0;
+      Object.keys(currentBuild).forEach(k => {
+        if (currentBuild[k]) subtotal += parseFloat(currentBuild[k].price);
+      });
+
+      const buildName = prompt('Enter a name for this custom build:', `My Dream PC - ${new Date().toLocaleDateString('en-IN')}`);
+      if (!buildName) return;
+
+      try {
+        const res = await fetch('/api/builder/save-build', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${TechFix.getToken()}`
+          },
+          body: JSON.stringify({
+            name: buildName,
+            configuration: currentBuild,
+            total_price: subtotal + 999
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          TechFix.showToast('Custom PC build saved to your account!', 'success');
+        } else {
+          TechFix.showToast(data.message, 'error');
+        }
+      } catch (err) {
+        console.error('Save build error:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderSlots);
+  </script>
+</body>
+</html>
